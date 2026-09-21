@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ApiError,
   createProduit,
@@ -199,26 +199,38 @@ function GammeEditor({
   const [success, setSuccess] = useState(false)
   const [adding, setAdding] = useState(false)
   const [productsError, setProductsError] = useState<string | null>(null)
+  // Glisser-déposer : id du produit en cours de déplacement + id de la carte survolée.
+  const [dragId, setDragId] = useState<number | null>(null)
+  const [overId, setOverId] = useState<number | null>(null)
 
   const produitsOrdonnes = ordre
     .map(id => gamme.products.find(p => p.id === id))
     .filter((p): p is Product => p !== undefined)
 
-  async function deplacer(produit: Product, direction: -1 | 1) {
-    const ids = [...ordre]
-    const i = ids.indexOf(produit.id)
-    const j = i + direction
-    if (i < 0 || j < 0 || j >= ids.length) return
-    ;[ids[i], ids[j]] = [ids[j], ids[i]]
+  function reordonner(ids: number[]) {
     onOrdreChanged(ids)
     setProductsError(null)
-    try {
-      await reorderProduits(gamme.id, ids)
-    } catch (err) {
+    reorderProduits(gamme.id, ids).catch(err => {
       // Rollback visuel : on revient à l'ordre précédent.
       onOrdreChanged(ordre)
       setProductsError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
-    }
+    })
+  }
+
+  function handleDrop(targetId: number) {
+    const source = dragId
+    setDragId(null)
+    setOverId(null)
+    if (source === null || source === targetId) return
+    const ids = [...ordre]
+    const from = ids.indexOf(source)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0) return
+    // On retire la source puis on réinsère à la position d'origine de la cible :
+    // déplacer vers le haut insère avant la cible, vers le bas après — comportement attendu.
+    ids.splice(from, 1)
+    ids.splice(to, 0, source)
+    reordonner(ids)
   }
 
   function set<K extends keyof GammeForm>(key: K, value: GammeForm[K]) {
@@ -342,10 +354,15 @@ function GammeEditor({
                 onSaved={fields => onProduitSaved(product.id, fields)}
                 onImageChanged={image => onProduitImageChanged(product.id, image)}
                 onDelete={() => handleDeleteProduit(product)}
-                onMoveUp={() => deplacer(product, -1)}
-                onMoveDown={() => deplacer(product, 1)}
-                isFirst={product.id === ordre[0]}
-                isLast={product.id === ordre[ordre.length - 1]}
+                onDragStart={() => setDragId(product.id)}
+                onDragEnd={() => {
+                  setDragId(null)
+                  setOverId(null)
+                }}
+                onDragOver={() => setOverId(product.id)}
+                onDrop={() => handleDrop(product.id)}
+                isDragSource={dragId === product.id}
+                isDropTarget={dragId !== null && overId === product.id && dragId !== product.id}
               />
             ))}
           </div>
@@ -434,19 +451,23 @@ function ProduitEditor({
   onSaved,
   onImageChanged,
   onDelete,
-  onMoveUp,
-  onMoveDown,
-  isFirst,
-  isLast,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+  isDragSource,
+  isDropTarget,
 }: {
   product: Product
   onSaved: (fields: Partial<Product>) => void
   onImageChanged: (image: string | null) => void
   onDelete: () => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  isFirst: boolean
-  isLast: boolean
+  onDragStart: () => void
+  onDragEnd: () => void
+  onDragOver: () => void
+  onDrop: () => void
+  isDragSource: boolean
+  isDropTarget: boolean
 }) {
   const [form, setForm] = useState<ProduitForm>({
     type: product.type,
@@ -477,37 +498,46 @@ function ProduitEditor({
     }
   }
 
+  const cardRef = useRef<HTMLDivElement>(null)
+
   return (
-    <div className="bg-white border border-[#3B1705]/10 p-5 space-y-3">
+    <div
+      ref={cardRef}
+      onDragOver={e => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        onDragOver()
+      }}
+      onDrop={e => {
+        e.preventDefault()
+        onDrop()
+      }}
+      className={`bg-white border border-[#3B1705]/10 p-5 space-y-3 ${isDropTarget ? 'ring-2 ring-[#C97B1A]' : ''} ${isDragSource ? 'opacity-40' : ''}`}
+    >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 truncate">
-          {product.type || 'Nouveau produit'}
-        </p>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={isFirst}
-            title="Monter"
-            aria-label="Monter ce produit"
-            className="w-7 h-7 border border-[#3B1705]/25 text-[#3B1705] hover:bg-[#3B1705]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs"
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            draggable
+            onDragStart={e => {
+              e.dataTransfer.effectAllowed = 'move'
+              e.dataTransfer.setData('text/plain', String(product.id))
+              if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20)
+              onDragStart()
+            }}
+            onDragEnd={onDragEnd}
+            title="Glisser pour réordonner"
+            aria-label={`Réordonner ${product.type || 'ce produit'} par glisser-déposer`}
+            className="cursor-grab active:cursor-grabbing text-[#3B1705]/40 hover:text-[#C97B1A] text-base leading-none flex-shrink-0 select-none px-0.5"
           >
-            ▲
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={isLast}
-            title="Descendre"
-            aria-label="Descendre ce produit"
-            className="w-7 h-7 border border-[#3B1705]/25 text-[#3B1705] hover:bg-[#3B1705]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs"
-          >
-            ▼
-          </button>
-          <Button variant="danger" onClick={onDelete}>
-            Supprimer
-          </Button>
+            ⠿
+          </span>
+          <p className="text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 truncate">
+            {product.type || 'Nouveau produit'}
+          </p>
         </div>
+        <Button variant="danger" onClick={onDelete}>
+          Supprimer
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
