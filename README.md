@@ -22,23 +22,23 @@ Le site présente la marque, son histoire, sa fondatrice et ses quatre gammes de
 - [Vite 8](https://vite.dev/) comme outil de build et serveur de développement
 - [Tailwind CSS v4](https://tailwindcss.com/) via le plugin `@tailwindcss/vite`
 - [TypeScript 5.7](https://www.typescriptlang.org/)
-- Gestion de paquets avec [pnpm](https://pnpm.io/)
+- Gestion de paquets avec [npm](https://www.npmjs.com/)
 
 ## Prérequis
 
 - Node.js 22 (voir `.mise.toml`)
-- pnpm 10 (peut être obtenu via `corepack enable` puis `corepack prepare pnpm@10 --activate`)
+- npm (fourni avec Node.js)
 
 ## Installation
 
 ```bash
-pnpm install
+npm install
 ```
 
 ## Développement
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Lance le serveur de développement Vite avec rechargement à chaud.
@@ -46,7 +46,7 @@ Lance le serveur de développement Vite avec rechargement à chaud.
 ## Build de production
 
 ```bash
-pnpm build
+npm run build
 ```
 
 Génère les fichiers statiques optimisés dans le dossier `dist/`.
@@ -54,7 +54,7 @@ Génère les fichiers statiques optimisés dans le dossier `dist/`.
 ## Prévisualisation du build
 
 ```bash
-pnpm preview
+npm run preview
 ```
 
 ## Structure du projet
