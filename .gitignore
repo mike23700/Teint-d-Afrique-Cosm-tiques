@@ -11,7 +11,12 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
-.figma/
+# Figma Make : seule la config site.json (requise par vite.config.ts pour builder
+# hors de la plateforme) est commitée ; le reste de .figma/ reste local.
+/.figma/*
+!/.figma/make/
+/.figma/make/*
+!/.figma/make/site.json
 
 # Platform-managed agentplat state, not project source. In the
 # client-initiated single-repo workspace layout (make's `Path: "."` spec) the

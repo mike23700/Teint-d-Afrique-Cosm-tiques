@@ -1,0 +1,11 @@
+{
+  "title": "Teint d'Afrique Cosmétiques",
+  "description": "Soins cosmétiques naturels pour peaux noires et métissées",
+  "language": "fr",
+  "robots": {
+    "index": true
+  },
+  "accessibility": {
+    "addBypassLinks": true
+  }
+}
