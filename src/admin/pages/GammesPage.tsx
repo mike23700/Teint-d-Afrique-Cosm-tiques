@@ -4,10 +4,10 @@ import {
   createProduit,
   deleteProduit,
   fetchGammes,
-  fetchMedia,
   updateGamme,
   updateProduit,
   reorderProduits,
+  uploadMedia,
   type Gamme,
   type MediaItem,
   type Product,
@@ -314,9 +314,8 @@ function GammeEditor({
         </Field>
 
         <MediaPicker
-          label="Image (depuis la médiathèque)"
+          label="Image (import direct depuis l'ordinateur)"
           currentImage={gamme.image}
-          activeImageId={gamme.imageId}
           onPick={async media => {
             await updateGamme(gamme.id, { imageId: media?.id ?? null })
             onImageChanged(media?.url ?? null)
@@ -375,31 +374,42 @@ function GammeEditor({
 function MediaPicker({
   label,
   currentImage,
-  activeImageId,
   onPick,
 }: {
   label: string
   currentImage: string | null
-  activeImageId: number | null
   onPick: (media: MediaItem | null) => Promise<void>
 }) {
-  const [media, setMedia] = useState<MediaItem[] | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    fetchMedia()
-      .then(setMedia)
-      .catch(() => setMedia([]))
-  }, [])
+  const ERROR_MESSAGES: Record<string, string> = {
+    file_too_large: 'Image trop lourde (5 Mo maximum).',
+    unsupported_file_type: 'Format non supporté (jpeg, png ou webp uniquement).',
+    invalid_image: "Le fichier n'est pas une image valide.",
+    upload_failed: "L'envoi a échoué, réessayez.",
+  }
 
-  async function pick(mediaItem: MediaItem | null) {
+  async function importFile(file: File) {
     setSaving(true)
     setError(null)
     try {
-      await onPick(mediaItem)
+      // Import direct depuis le PC : téléverse l'image puis l'associe en un seul geste.
+      const { id, url } = await uploadMedia(file, '')
+      await onPick({
+        id,
+        url,
+        originalName: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        altText: '',
+        createdAt: new Date().toISOString(),
+      })
     } catch (err) {
-      setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+      const code = err instanceof ApiError ? err.code : 'erreur_inconnue'
+      setError(ERROR_MESSAGES[code] ?? 'Une erreur est survenue, réessayez.')
     } finally {
       setSaving(false)
     }
@@ -411,35 +421,66 @@ function MediaPicker({
       {currentImage && (
         <img src={currentImage} alt="" className="w-32 h-24 object-cover border border-[#3B1705]/10 mb-3" />
       )}
-      {media === null ? (
-        <p className="text-xs text-[#3B1705]/40">Chargement de la médiathèque...</p>
-      ) : media.length === 0 ? (
-        <p className="text-xs text-[#3B1705]/40">
-          Aucune image dans la médiathèque pour l'instant — téléversez-en une dans l'onglet « Médiathèque ».
-        </p>
-      ) : (
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {media.map(m => (
-              <button
-                key={m.id}
-                type="button"
-                disabled={saving}
-                onClick={() => pick(m)}
-                className={`w-16 h-16 border-2 transition-colors disabled:opacity-50 ${
-                  m.id === activeImageId ? 'border-[#C97B1A]' : 'border-transparent hover:border-[#C97B1A]'
-                }`}
-              >
-                <img src={m.url} alt={m.altText} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-          {currentImage && (
-            <Button type="button" variant="secondary" disabled={saving} onClick={() => pick(null)} className="mt-2">
-              Retirer l'image
+      <div
+        onDragOver={e => {
+          e.preventDefault()
+          setDragOver(true)
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => {
+          e.preventDefault()
+          setDragOver(false)
+          if (saving) return
+          const file = e.dataTransfer.files?.[0]
+          if (file) importFile(file)
+        }}
+        className={`border border-dashed p-4 text-center transition-colors ${
+          dragOver ? 'border-[#C97B1A] bg-[#C97B1A]/5' : 'border-[#3B1705]/25'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={e => {
+            const file = e.target.files?.[0]
+            if (file && !saving) importFile(file)
+            if (inputRef.current) inputRef.current.value = ''
+          }}
+        />
+        {saving ? (
+          <p className="text-sm text-[#3B1705]/60">Import en cours...</p>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => inputRef.current?.click()}
+            >
+              Importer depuis l'ordinateur
             </Button>
-          )}
-        </div>
+            <p className="text-[11px] text-[#3B1705]/40 mt-2">
+              ou glissez-déposez une image ici (jpeg, png, webp — 5 Mo max)
+            </p>
+          </>
+        )}
+      </div>
+      {currentImage && (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={saving}
+          onClick={() => {
+            setError(null)
+            onPick(null).catch(err =>
+              setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+            )
+          }}
+          className="mt-2"
+        >
+          Retirer l'image
+        </Button>
       )}
       {error && <p className="text-xs text-red-700 mt-2">{error}</p>}
     </div>
@@ -557,9 +598,8 @@ function ProduitEditor({
       </Field>
 
       <MediaPicker
-        label="Image du produit (depuis la médiathèque)"
+        label="Image du produit (import direct depuis l'ordinateur)"
         currentImage={product.image}
-        activeImageId={product.imageId}
         onPick={async media => {
           await updateProduit(product.id, { imageId: media?.id ?? null })
           onImageChanged(media?.url ?? null)
