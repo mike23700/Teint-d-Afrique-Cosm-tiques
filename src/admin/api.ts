@@ -50,6 +50,18 @@ export interface ContentBlock {
   blockKey: string
   blockType: 'text' | 'richtext' | 'image'
   value: string
+  /** Résolu pour les blocs de type "image" (null si aucun média associé). */
+  imageUrl?: string | null
+}
+
+export interface ContactMessage {
+  id: number
+  name: string
+  email: string
+  phone: string
+  message: string
+  isRead: 0 | 1 | boolean
+  createdAt: string
 }
 
 export interface Settings {
@@ -169,6 +181,14 @@ export function deleteProduit(id: number): Promise<void> {
   })
 }
 
+/** Réordonne les gammes : `ids` = tous les ids dans le nouvel ordre. */
+export function reorderGammes(ids: string[]): Promise<void> {
+  return request('/api/gammes/reorder.php', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  })
+}
+
 /** Réordonne les produits d'une gamme : `ids` = tous les ids dans le nouvel ordre. */
 export function reorderProduits(gammeId: string, ids: number[]): Promise<void> {
   return request('/api/produits/reorder.php', {
@@ -200,6 +220,26 @@ export function updateSetting(key: keyof Settings, value: string): Promise<void>
   return request('/api/settings/update.php', {
     method: 'POST',
     body: JSON.stringify({ key, value }),
+  })
+}
+
+// --- Messages de contact ---
+
+export function fetchContactMessages(): Promise<ContactMessage[]> {
+  return request<ContactMessage[]>('/api/contact/list.php')
+}
+
+export function setContactMessageRead(id: number, isRead: boolean): Promise<void> {
+  return request('/api/contact/manage.php', {
+    method: 'POST',
+    body: JSON.stringify({ id, isRead }),
+  })
+}
+
+export function deleteContactMessage(id: number): Promise<void> {
+  return request('/api/contact/manage.php', {
+    method: 'POST',
+    body: JSON.stringify({ id, delete: true }),
   })
 }
 

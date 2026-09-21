@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react'
-import { ApiError, fetchContent, updateContent, type ContentBlock } from '@/admin/api'
+import { useEffect, useRef, useState } from 'react'
+import {
+  ApiError,
+  fetchContent,
+  updateContent,
+  uploadMedia,
+  type ContentBlock,
+  type MediaItem,
+} from '@/admin/api'
 import { Banner, Button, Field, TextArea } from '@/admin/components/ui'
 
 const PAGES: { id: string; label: string }[] = [
@@ -62,6 +69,110 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // Blocs de type "image" : import direct depuis l'ordinateur (comme gammes/produits).
+  const [imageSaving, setImageSaving] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function importImage(file: File) {
+    setImageSaving(true)
+    setImageError(null)
+    setSuccess(false)
+    try {
+      const { id } = await uploadMedia(file, '')
+      await updateContent(page, block.blockKey, String(id))
+      setSuccess(true)
+      setValue(String(id))
+      // Recharge les blocs pour résoudre la nouvelle imageUrl affichée.
+      window.dispatchEvent(new CustomEvent('content-updated'))
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : 'erreur_inconnue'
+      setImageError(
+        code === 'file_too_large'
+          ? 'Image trop lourde (5 Mo maximum).'
+          : code === 'unsupported_file_type'
+            ? 'Format non supporté (jpeg, png ou webp uniquement).'
+            : `Erreur : ${code}`
+      )
+    } finally {
+      setImageSaving(false)
+    }
+  }
+
+  async function removeImage() {
+    setImageSaving(true)
+    setImageError(null)
+    try {
+      await updateContent(page, block.blockKey, '')
+      setSuccess(true)
+      setValue('')
+      window.dispatchEvent(new CustomEvent('content-updated'))
+    } catch (err) {
+      setImageError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+    } finally {
+      setImageSaving(false)
+    }
+  }
+
+  if (block.blockType === 'image') {
+    return (
+      <div className="bg-white border border-[#3B1705]/10 p-5 space-y-3">
+        <p className="text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60">{block.blockKey}</p>
+        {block.imageUrl && (
+          <img src={block.imageUrl} alt="" className="w-40 object-cover border border-[#3B1705]/10" />
+        )}
+        <div
+          onDragOver={e => {
+            e.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => {
+            e.preventDefault()
+            setDragOver(false)
+            const file = e.dataTransfer.files?.[0]
+            if (file && !imageSaving) importImage(file)
+          }}
+          className={`border border-dashed p-4 text-center transition-colors ${
+            dragOver ? 'border-[#C97B1A] bg-[#C97B1A]/5' : 'border-[#3B1705]/25'
+          }`}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0]
+              if (file && !imageSaving) importImage(file)
+              if (inputRef.current) inputRef.current.value = ''
+            }}
+          />
+          {imageSaving ? (
+            <p className="text-sm text-[#3B1705]/60">Import en cours...</p>
+          ) : (
+            <>
+              <Button type="button" variant="secondary" onClick={() => inputRef.current?.click()}>
+                Importer depuis l'ordinateur
+              </Button>
+              <p className="text-[11px] text-[#3B1705]/40 mt-2">
+                ou glissez-déposez une image ici (jpeg, png, webp — 5 Mo max)
+              </p>
+            </>
+          )}
+        </div>
+        {block.imageUrl && (
+          <Button type="button" variant="secondary" disabled={imageSaving} onClick={removeImage}>
+            Retirer l'image
+          </Button>
+        )}
+        {imageError && <p className="text-xs text-red-700">{imageError}</p>}
+        {success && <p className="text-xs text-emerald-700">Enregistré.</p>}
+      </div>
+    )
+  }
 
   async function handleSave() {
     setSaving(true)

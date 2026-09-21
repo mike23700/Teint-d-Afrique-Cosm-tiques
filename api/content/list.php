@@ -14,9 +14,19 @@ if (!in_array($page, $allowedPages, true)) {
 }
 
 $stmt = db()->prepare(
-    'SELECT block_key AS blockKey, block_type AS blockType, value
-     FROM page_content WHERE page = :page'
+    'SELECT block_key AS blockKey, block_type AS blockType, value, m.filename AS imageFilename
+     FROM page_content pc
+     LEFT JOIN media m ON m.id = pc.value AND pc.block_type = \'image\'
+     WHERE pc.page = :page'
 );
 $stmt->execute(['page' => $page]);
 
-json_success($stmt->fetchAll());
+$blocks = array_map(function (array $b): array {
+    // Les blocs "image" portent l'id du media dans `value` ; on ajoute une URL
+    // prete a l'emploi pour l'affichage (null si aucun media associe).
+    $b['imageUrl'] = $b['imageFilename'] ? '/uploads/' . $b['imageFilename'] : null;
+    unset($b['imageFilename']);
+    return $b;
+}, $stmt->fetchAll());
+
+json_success($blocks);

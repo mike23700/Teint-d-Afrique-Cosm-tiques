@@ -15,6 +15,8 @@ export interface ContentBlock {
   blockKey: string
   blockType: 'text' | 'richtext' | 'image'
   value: string
+  /** Résolu pour les blocs de type "image" (null si aucun média associé). */
+  imageUrl?: string | null
 }
 
 export interface Settings {

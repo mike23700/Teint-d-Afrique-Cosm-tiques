@@ -4,6 +4,7 @@ import Layout, { type Tab } from '@/admin/components/Layout'
 import LoginPage from '@/admin/pages/LoginPage'
 import GammesPage from '@/admin/pages/GammesPage'
 import ContentPage from '@/admin/pages/ContentPage'
+import MessagesPage from '@/admin/pages/MessagesPage'
 import MediaPage from '@/admin/pages/MediaPage'
 import SettingsPage from '@/admin/pages/SettingsPage'
 
@@ -47,6 +48,7 @@ export default function AdminApp() {
     <Layout active={tab} onTabChange={setTab} onLogout={logout}>
       {tab === 'gammes' && <GammesPage />}
       {tab === 'contenu' && <ContentPage />}
+      {tab === 'messages' && <MessagesPage />}
       {tab === 'media' && <MediaPage />}
       {tab === 'reglages' && <SettingsPage />}
     </Layout>

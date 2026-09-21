@@ -82,3 +82,16 @@ CREATE TABLE IF NOT EXISTS settings (
   `key` VARCHAR(100) PRIMARY KEY,
   `value` VARCHAR(500) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Messages reçus via le formulaire de contact du site public (lutis par l'admin).
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(190) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  phone VARCHAR(50) NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  ip_address VARCHAR(45) NOT NULL DEFAULT '',
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_contact_messages_created (created_at DESC)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

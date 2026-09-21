@@ -4,6 +4,9 @@ import { useSettings } from '@/hooks/useSettings'
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const settings = useSettings()
   const content = useContent('contact', {
     intro_text:
@@ -190,44 +193,100 @@ export default function ContactPage() {
                   </h3>
                   <form
                     className="space-y-5"
-                    onSubmit={e => {
+                    onSubmit={async e => {
                       e.preventDefault()
-                      setSent(true)
+                      setSending(true)
+                      setSendError(null)
+                      try {
+                        const res = await fetch('/api/contact/submit.php', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(form),
+                        })
+                        const body = await res.json().catch(() => null)
+                        if (!res.ok || !body?.success) {
+                          throw new Error(body?.error ?? `api_error_${res.status}`)
+                        }
+                        setSent(true)
+                        setForm({ name: '', email: '', phone: '', message: '' })
+                      } catch (err) {
+                        const code = err instanceof Error ? err.message : 'erreur_inconnue'
+                        setSendError(
+                          code === 'too_many_requests'
+                            ? 'Vous avez envoyé plusieurs messages récemment. Réessayez dans quelques minutes.'
+                            : code === 'invalid_email'
+                              ? 'Adresse email invalide.'
+                              : 'Une erreur est survenue. Réessayez ou écrivez-nous directement par email.'
+                        )
+                      } finally {
+                        setSending(false)
+                      }
                     }}
                   >
-                    {[
-                      { label: 'Nom complet', type: 'text', placeholder: 'Votre nom', required: true },
-                      { label: 'Email', type: 'email', placeholder: 'votre@email.com', required: true },
-                      { label: 'Téléphone', type: 'tel', placeholder: '+237 6XX XXX XXX', required: false },
-                    ].map(f => (
-                      <div key={f.label}>
-                        <label className="text-[9px] tracking-[0.3em] uppercase text-[#FAF6EF]/55 block mb-2">
-                          {f.label} {f.required && <span className="text-[#C97B1A]">*</span>}
-                        </label>
-                        <input
-                          type={f.type}
-                          placeholder={f.placeholder}
-                          required={f.required}
-                          className="w-full bg-[#FAF6EF]/8 border border-[#FAF6EF]/18 text-[#FAF6EF] placeholder:text-[#FAF6EF]/28 px-4 py-3 text-sm focus:outline-none focus:border-[#C97B1A] transition-colors"
-                        />
-                      </div>
-                    ))}
+                    <div>
+                      <label className="text-[9px] tracking-[0.3em] uppercase text-[#FAF6EF]/55 block mb-2">
+                        Nom complet <span className="text-[#C97B1A]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={e => setForm({ ...form, name: e.target.value })}
+                        placeholder="Votre nom"
+                        required
+                        maxLength={190}
+                        className="w-full bg-[#FAF6EF]/8 border border-[#FAF6EF]/18 text-[#FAF6EF] placeholder:text-[#FAF6EF]/28 px-4 py-3 text-sm focus:outline-none focus:border-[#C97B1A] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] tracking-[0.3em] uppercase text-[#FAF6EF]/55 block mb-2">
+                        Email <span className="text-[#C97B1A]">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        placeholder="votre@email.com"
+                        required
+                        maxLength={190}
+                        className="w-full bg-[#FAF6EF]/8 border border-[#FAF6EF]/18 text-[#FAF6EF] placeholder:text-[#FAF6EF]/28 px-4 py-3 text-sm focus:outline-none focus:border-[#C97B1A] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] tracking-[0.3em] uppercase text-[#FAF6EF]/55 block mb-2">
+                        Téléphone
+                      </label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={e => setForm({ ...form, phone: e.target.value })}
+                        placeholder="+237 6XX XXX XXX"
+                        maxLength={50}
+                        className="w-full bg-[#FAF6EF]/8 border border-[#FAF6EF]/18 text-[#FAF6EF] placeholder:text-[#FAF6EF]/28 px-4 py-3 text-sm focus:outline-none focus:border-[#C97B1A] transition-colors"
+                      />
+                    </div>
                     <div>
                       <label className="text-[9px] tracking-[0.3em] uppercase text-[#FAF6EF]/55 block mb-2">
                         Message <span className="text-[#C97B1A]">*</span>
                       </label>
                       <textarea
                         rows={5}
+                        value={form.message}
+                        onChange={e => setForm({ ...form, message: e.target.value })}
                         placeholder="Votre message, votre demande..."
                         required
+                        maxLength={5000}
                         className="w-full bg-[#FAF6EF]/8 border border-[#FAF6EF]/18 text-[#FAF6EF] placeholder:text-[#FAF6EF]/28 px-4 py-3 text-sm focus:outline-none focus:border-[#C97B1A] transition-colors resize-none"
                       />
                     </div>
+                    {sendError && (
+                      <p className="text-xs text-red-300 bg-red-900/30 border border-red-400/30 px-4 py-2">{sendError}</p>
+                    )}
                     <button
                       type="submit"
-                      className="w-full bg-[#C97B1A] text-white py-4 text-[11px] tracking-[0.25em] uppercase hover:bg-[#A85E0F] transition-colors"
+                      disabled={sending}
+                      className="w-full bg-[#C97B1A] text-white py-4 text-[11px] tracking-[0.25em] uppercase hover:bg-[#A85E0F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Envoyer le Message
+                      {sending ? 'Envoi en cours...' : 'Envoyer le Message'}
                     </button>
                   </form>
                 </>

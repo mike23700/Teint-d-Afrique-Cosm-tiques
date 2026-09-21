@@ -162,6 +162,11 @@ $pageContent = [
     ['page' => 'contact', 'block_key' => 'intro_text', 'block_type' => 'text', 'value' => "Nous sommes à votre écoute. Écrivez-nous, appelez-nous ou retrouvez-nous sur les réseaux sociaux."],
     ['page' => 'contact', 'block_key' => 'form_title', 'block_type' => 'text', 'value' => "Envoyez-nous un message"],
     ['page' => 'contact', 'block_key' => 'form_success_message', 'block_type' => 'text', 'value' => "Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais."],
+
+    // Images éditables de l'accueil : vides par défaut = les visuels statiques Unsplash
+    // restent affichés tant que la marque n'a pas importé ses propres photos.
+    ['page' => 'accueil', 'block_key' => 'hero_image', 'block_type' => 'image', 'value' => ''],
+    ['page' => 'accueil', 'block_key' => 'fondatrice_image', 'block_type' => 'image', 'value' => ''],
 ];
 
 $insertContent = $pdo->prepare(

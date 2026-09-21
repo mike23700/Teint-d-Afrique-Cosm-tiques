@@ -56,6 +56,7 @@ Codes HTTP utilisés : `200` OK, `204` (préflight CORS), `400` requête invalid
 | GET | `/api/gammes/list.php` | non | — | tableau de gammes (avec `products`) |
 | GET | `/api/gammes/get.php?id=eclat` | non | — | une gamme (avec `products`) |
 | POST | `/api/gammes/update.php` | admin + CSRF | `{id, nom?, tagline?, ingredients?, color?, colorLight?, colorDark?, description?, ingredientsDetail?, imageId?}` | `{updated: true}` |
+| POST | `/api/gammes/reorder.php` | admin + CSRF | `{ids: [...]}` (ids dans le nouvel ordre) | `{reordered: true}` |
 
 `id` doit être l'un de `eclat`, `reparation`, `hydratation`, `nutrition` (ensemble fixe, voir `docs/plan.md`). Les champs `color*` doivent être au format `#RRGGBB`. `imageId` est l'id d'un média existant (voir `media/list.php`) à associer à la gamme, ou `null` pour retirer l'image actuelle.
 
@@ -106,6 +107,18 @@ La suppression d'un produit est définitive. Symétriquement, la suppression d'u
 | POST | `/api/content/update.php` | admin + CSRF | `{page, blockKey, value, blockType?}` | `{updated: true}` |
 
 `page` ∈ `accueil`, `presentation`, `histoire`, `contact`. `blockKey` doit matcher `^[a-z0-9_]+$`. `blockType` (`text`/`richtext`/`image`) n'est utilisé que pour créer un nouveau bloc — sur un bloc existant, le type déjà enregistré en base prévaut (il ne peut pas être changé via cet endpoint). Les blocs `richtext` acceptent uniquement `<p> <strong> <em> <br> <ul> <li> <a>` ; tout le reste est retiré côté serveur.
+
+Les blocs de type `image` stockent l'**id d'un média** dans `value` (ou une chaîne vide si aucun) : `update.php` refuse tout id absent de la médiathèque (`invalid_media_id`). `list.php` ajoute à ces blocs un champ `imageUrl` prêt à l'emploi (`/uploads/...` ou `null`). Deux blocs image existent pour l'accueil : `hero_image` (grande photo du hero) et `fondatrice_image` (portrait de la fondatrice) — tant qu'ils sont vides, le site affiche ses visuels statiques de repli.
+
+### Messages de contact
+
+| Méthode | URL | Auth | Body / Query | Réponse |
+|---|---|---|---|---|
+| POST | `/api/contact/submit.php` | **public** | `{name, email, phone?, message}` | `{received: true}` (201) |
+| GET | `/api/contact/list.php` | admin | — | tableau de messages `{id, name, email, phone, message, is_read, created_at}` |
+| POST | `/api/contact/manage.php` | admin + CSRF | `{id, isRead}` ou `{id, delete: true}` | `{updated: true}` / `{deleted: true}` |
+
+`submit.php` est le seul endpoint public d'écriture de tout le projet : il est limité à **5 messages par IP et par tranche de 10 minutes** (429 `too_many_requests` au-delà), avec validation stricte (email valide, message ≤ 5000 caractères) et sanitisation des champs. Les messages arrivent dans l'onglet « Messages » de l'admin (marquer lu/non lu, supprimer, répondre par email via un simple clic sur l'adresse).
 
 ### Paramètres — coordonnées & réseaux sociaux (lecture publique, écriture admin)
 

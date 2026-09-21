@@ -39,7 +39,24 @@ if (!in_array($blockType, ['text', 'richtext', 'image'], true)) {
     json_error('invalid_block_type', 422);
 }
 
-$cleanValue = $blockType === 'richtext' ? sanitize_richtext($value) : sanitize_plain_text($value);
+// Bloc de type "image" : la valeur est l'id d'un media de la mediatheque (ou vide pour retirer).
+if ($blockType === 'image') {
+    if (trim($value) === '') {
+        $cleanValue = '';
+    } else {
+        if (!ctype_digit(trim($value))) {
+            json_error('invalid_media_id', 422);
+        }
+        $mediaStmt = $pdo->prepare('SELECT id FROM media WHERE id = :id');
+        $mediaStmt->execute(['id' => (int)trim($value)]);
+        if (!$mediaStmt->fetch()) {
+            json_error('invalid_media_id', 422);
+        }
+        $cleanValue = (string)(int)trim($value);
+    }
+} else {
+    $cleanValue = $blockType === 'richtext' ? sanitize_richtext($value) : sanitize_plain_text($value);
+}
 
 $stmt = $pdo->prepare(
     'INSERT INTO page_content (page, block_key, block_type, value, updated_at)

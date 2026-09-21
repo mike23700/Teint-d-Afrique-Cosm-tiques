@@ -7,6 +7,7 @@ import {
   updateGamme,
   updateProduit,
   reorderProduits,
+  reorderGammes,
   uploadMedia,
   type Gamme,
   type MediaItem,
@@ -54,6 +55,32 @@ export default function GammesPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [ordre, setOrdre] = useState<OrdreParGamme>({})
+  // Glisser-déposer des onglets gammes.
+  const [dragGammeId, setDragGammeId] = useState<string | null>(null)
+  const [overGammeId, setOverGammeId] = useState<string | null>(null)
+
+  function handleGammeDrop(targetId: string) {
+    const source = dragGammeId
+    setDragGammeId(null)
+    setOverGammeId(null)
+    if (!source || source === targetId) return
+    const ids = gammes.map(g => g.id)
+    const from = ids.indexOf(source)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0) return
+    ids.splice(from, 1)
+    ids.splice(to, 0, source)
+    setGammes(prev => {
+      const next = [...prev]
+      next.splice(from, 1)
+      next.splice(to, 0, prev[from])
+      return next
+    })
+    reorderGammes(ids).catch(() => {
+      setLoadError('Impossible de réordonner les gammes.')
+      setLoadError(null)
+    })
+  }
 
   // Initialise/synchronise l'ordre local avec les produits chargés.
   useEffect(() => {
@@ -143,16 +170,41 @@ export default function GammesPage() {
         {gammes.map(g => (
           <button
             key={g.id}
+            draggable
+            onDragStart={e => {
+              e.dataTransfer.effectAllowed = 'move'
+              e.dataTransfer.setData('text/plain', g.id)
+              setDragGammeId(g.id)
+            }}
+            onDragEnd={() => {
+              setDragGammeId(null)
+              setOverGammeId(null)
+            }}
+            onDragOver={e => {
+              e.preventDefault()
+              setOverGammeId(g.id)
+            }}
+            onDrop={e => {
+              e.preventDefault()
+              handleGammeDrop(g.id)
+            }}
             onClick={() => setSelectedId(g.id)}
+            title="Glisser pour réordonner les gammes"
             className={`flex items-center gap-2 px-4 py-2 text-[11px] tracking-[0.15em] uppercase border transition-colors ${
               selectedId === g.id ? 'border-[#3B1705] bg-[#3B1705] text-[#FAF6EF]' : 'border-[#3B1705]/20 text-[#3B1705] hover:bg-[#3B1705]/5'
-            }`}
+            } ${dragGammeId === g.id ? 'opacity-40' : ''} ${dragGammeId && overGammeId === g.id && dragGammeId !== g.id ? 'ring-2 ring-[#C97B1A]' : ''}`}
           >
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: g.color }} />
+            <span
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ background: g.color }}
+            />
             {g.nom}
           </button>
         ))}
       </div>
+      <p className="text-[11px] text-[#3B1705]/35 -mt-4">
+        Astuce : glissez-déposez les onglets pour changer l'ordre des gammes sur la boutique.
+      </p>
 
       {selected && (
         <GammeEditor
