@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   ApiError,
+  createProduit,
+  deleteProduit,
   fetchGammes,
   fetchMedia,
   updateGamme,
@@ -20,6 +22,13 @@ type GammeForm = {
   colorDark: string
   description: string
   ingredientsDetail: string
+}
+
+type ProduitForm = {
+  type: string
+  poids: string
+  symbol: string
+  description: string
 }
 
 function toForm(g: Gamme): GammeForm {
@@ -69,6 +78,28 @@ export default function GammesPage() {
     )
   }
 
+  function handleProduitImageChanged(gammeId: string, produitId: number, image: string | null) {
+    setGammes(prev =>
+      prev.map(g =>
+        g.id !== gammeId
+          ? g
+          : { ...g, products: g.products.map(p => (p.id === produitId ? { ...p, image } : p)) }
+      )
+    )
+  }
+
+  function handleProduitAdded(gammeId: string, produit: Product) {
+    setGammes(prev => prev.map(g => (g.id === gammeId ? { ...g, products: [...g.products, produit] } : g)))
+  }
+
+  function handleProduitRemoved(gammeId: string, produitId: number) {
+    setGammes(prev =>
+      prev.map(g =>
+        g.id === gammeId ? { ...g, products: g.products.filter(p => p.id !== produitId) } : g
+      )
+    )
+  }
+
   if (loading) return <p className="text-sm text-[#3B1705]/50">Chargement des gammes...</p>
   if (loadError) return <Banner kind="error">{loadError}</Banner>
 
@@ -98,6 +129,9 @@ export default function GammesPage() {
           onGammeSaved={form => handleGammeSaved(selected.id, form)}
           onImageChanged={image => handleImageChanged(selected.id, image)}
           onProduitSaved={(produitId, fields) => handleProduitSaved(selected.id, produitId, fields)}
+          onProduitImageChanged={(produitId, image) => handleProduitImageChanged(selected.id, produitId, image)}
+          onProduitAdded={produit => handleProduitAdded(selected.id, produit)}
+          onProduitRemoved={produitId => handleProduitRemoved(selected.id, produitId)}
         />
       )}
     </div>
@@ -109,16 +143,24 @@ function GammeEditor({
   onGammeSaved,
   onImageChanged,
   onProduitSaved,
+  onProduitImageChanged,
+  onProduitAdded,
+  onProduitRemoved,
 }: {
   gamme: Gamme
   onGammeSaved: (form: GammeForm) => void
   onImageChanged: (image: string | null) => void
   onProduitSaved: (produitId: number, fields: Partial<Product>) => void
+  onProduitImageChanged: (produitId: number, image: string | null) => void
+  onProduitAdded: (produit: Product) => void
+  onProduitRemoved: (produitId: number) => void
 }) {
   const [form, setForm] = useState<GammeForm>(toForm(gamme))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [productsError, setProductsError] = useState<string | null>(null)
 
   function set<K extends keyof GammeForm>(key: K, value: GammeForm[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -136,6 +178,35 @@ function GammeEditor({
       setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleAddProduit() {
+    setAdding(true)
+    setProductsError(null)
+    try {
+      const produit = await createProduit(gamme.id, {
+        type: 'Nouveau produit',
+        poids: '',
+        symbol: '❖',
+        description: "Décrivez ce produit avant de le mettre en ligne.",
+      })
+      onProduitAdded(produit)
+    } catch (err) {
+      setProductsError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  async function handleDeleteProduit(produit: Product) {
+    if (!window.confirm(`Supprimer « ${produit.type} » de la gamme ? Cette action est immédiate.`)) return
+    setProductsError(null)
+    try {
+      await deleteProduit(produit.id)
+      onProduitRemoved(produit.id)
+    } catch (err) {
+      setProductsError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     }
   }
 
@@ -171,7 +242,15 @@ function GammeEditor({
           <TextArea rows={3} value={form.ingredientsDetail} onChange={e => set('ingredientsDetail', e.target.value)} />
         </Field>
 
-        <ImagePicker gamme={gamme} onImageChanged={onImageChanged} />
+        <MediaPicker
+          label="Image (depuis la médiathèque)"
+          currentImage={gamme.image}
+          activeImageId={gamme.imageId}
+          onPick={async media => {
+            await updateGamme(gamme.id, { imageId: media?.id ?? null })
+            onImageChanged(media?.url ?? null)
+          }}
+        />
 
         {error && <Banner kind="error">{error}</Banner>}
         {success && <Banner kind="success">Gamme enregistrée.</Banner>}
@@ -182,22 +261,51 @@ function GammeEditor({
       </section>
 
       <section>
-        <h3 className="text-[11px] tracking-[0.2em] uppercase text-[#3B1705]/60 mb-4">Les 4 produits</h3>
-        <div className="grid md:grid-cols-2 gap-5">
-          {gamme.products.map(product => (
-            <ProduitEditor key={product.id} product={product} onSaved={fields => onProduitSaved(product.id, fields)} />
-          ))}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h3 className="text-[11px] tracking-[0.2em] uppercase text-[#3B1705]/60">
+            Produits ({gamme.products.length})
+          </h3>
+          <Button variant="secondary" onClick={handleAddProduit} disabled={adding}>
+            {adding ? 'Ajout...' : '+ Ajouter un produit'}
+          </Button>
         </div>
+
+        {productsError && <div className="mb-4"><Banner kind="error">{productsError}</Banner></div>}
+
+        {gamme.products.length === 0 ? (
+          <p className="text-sm text-[#3B1705]/40">Aucun produit dans cette gamme pour l'instant.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-5">
+            {gamme.products.map(product => (
+              <ProduitEditor
+                key={product.id}
+                product={product}
+                onSaved={fields => onProduitSaved(product.id, fields)}
+                onImageChanged={image => onProduitImageChanged(product.id, image)}
+                onDelete={() => handleDeleteProduit(product)}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )
 }
 
-function ImagePicker({ gamme, onImageChanged }: { gamme: Gamme; onImageChanged: (image: string | null) => void }) {
+function MediaPicker({
+  label,
+  currentImage,
+  activeImageId,
+  onPick,
+}: {
+  label: string
+  currentImage: string | null
+  activeImageId: number | null
+  onPick: (media: MediaItem | null) => Promise<void>
+}) {
   const [media, setMedia] = useState<MediaItem[] | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const currentImage = gamme.image
 
   useEffect(() => {
     fetchMedia()
@@ -209,8 +317,7 @@ function ImagePicker({ gamme, onImageChanged }: { gamme: Gamme; onImageChanged: 
     setSaving(true)
     setError(null)
     try {
-      await updateGamme(gamme.id, { imageId: mediaItem?.id ?? null })
-      onImageChanged(mediaItem?.url ?? null)
+      await onPick(mediaItem)
     } catch (err) {
       setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     } finally {
@@ -220,9 +327,7 @@ function ImagePicker({ gamme, onImageChanged }: { gamme: Gamme; onImageChanged: 
 
   return (
     <div>
-      <p className="block text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 mb-2">
-        Image (depuis la médiathèque)
-      </p>
+      <p className="block text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 mb-2">{label}</p>
       {currentImage && (
         <img src={currentImage} alt="" className="w-32 h-24 object-cover border border-[#3B1705]/10 mb-3" />
       )}
@@ -233,20 +338,24 @@ function ImagePicker({ gamme, onImageChanged }: { gamme: Gamme; onImageChanged: 
           Aucune image dans la médiathèque pour l'instant — téléversez-en une dans l'onglet « Médiathèque ».
         </p>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {media.map(m => (
-            <button
-              key={m.id}
-              type="button"
-              disabled={saving}
-              onClick={() => pick(m)}
-              className="w-16 h-16 border-2 border-transparent hover:border-[#C97B1A] transition-colors disabled:opacity-50"
-            >
-              <img src={m.url} alt={m.altText} className="w-full h-full object-cover" />
-            </button>
-          ))}
+        <div>
+          <div className="flex flex-wrap gap-2">
+            {media.map(m => (
+              <button
+                key={m.id}
+                type="button"
+                disabled={saving}
+                onClick={() => pick(m)}
+                className={`w-16 h-16 border-2 transition-colors disabled:opacity-50 ${
+                  m.id === activeImageId ? 'border-[#C97B1A]' : 'border-transparent hover:border-[#C97B1A]'
+                }`}
+              >
+                <img src={m.url} alt={m.altText} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
           {currentImage && (
-            <Button type="button" variant="secondary" disabled={saving} onClick={() => pick(null)}>
+            <Button type="button" variant="secondary" disabled={saving} onClick={() => pick(null)} className="mt-2">
               Retirer l'image
             </Button>
           )}
@@ -257,8 +366,18 @@ function ImagePicker({ gamme, onImageChanged }: { gamme: Gamme; onImageChanged: 
   )
 }
 
-function ProduitEditor({ product, onSaved }: { product: Product; onSaved: (fields: Partial<Product>) => void }) {
-  const [form, setForm] = useState({
+function ProduitEditor({
+  product,
+  onSaved,
+  onImageChanged,
+  onDelete,
+}: {
+  product: Product
+  onSaved: (fields: Partial<Product>) => void
+  onImageChanged: (image: string | null) => void
+  onDelete: () => void
+}) {
+  const [form, setForm] = useState<ProduitForm>({
     type: product.type,
     poids: product.poids,
     symbol: product.symbol,
@@ -268,7 +387,7 @@ function ProduitEditor({ product, onSaved }: { product: Product; onSaved: (field
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+  function set<K extends keyof ProduitForm>(key: K, value: ProduitForm[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
     setSuccess(false)
   }
@@ -289,6 +408,15 @@ function ProduitEditor({ product, onSaved }: { product: Product; onSaved: (field
 
   return (
     <div className="bg-white border border-[#3B1705]/10 p-5 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 truncate">
+          {product.type || 'Nouveau produit'}
+        </p>
+        <Button variant="danger" onClick={onDelete}>
+          Supprimer
+        </Button>
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         <Field label="Type">
           <TextInput value={form.type} onChange={e => set('type', e.target.value)} />
@@ -300,11 +428,24 @@ function ProduitEditor({ product, onSaved }: { product: Product; onSaved: (field
           <TextInput value={form.symbol} onChange={e => set('symbol', e.target.value)} />
         </Field>
       </div>
+
       <Field label="Description">
         <TextArea rows={3} value={form.description} onChange={e => set('description', e.target.value)} />
       </Field>
-      {error && <p className="text-xs text-red-700">{error}</p>}
-      {success && <p className="text-xs text-emerald-700">Enregistré.</p>}
+
+      <MediaPicker
+        label="Image du produit (depuis la médiathèque)"
+        currentImage={product.image}
+        activeImageId={product.imageId}
+        onPick={async media => {
+          await updateProduit(product.id, { imageId: media?.id ?? null })
+          onImageChanged(media?.url ?? null)
+        }}
+      />
+
+      {error && <Banner kind="error">{error}</Banner>}
+      {success && <Banner kind="success">Produit enregistré.</Banner>}
+
       <Button variant="secondary" onClick={handleSave} disabled={saving}>
         {saving ? 'Enregistrement...' : 'Enregistrer ce produit'}
       </Button>

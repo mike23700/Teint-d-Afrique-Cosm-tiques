@@ -10,6 +10,24 @@ export interface Product {
   poids: string
   symbol: string
   description: string
+  imageId: number | null
+  image: string | null
+}
+
+export interface ProduitCreateFields {
+  type: string
+  poids: string
+  symbol: string
+  description: string
+  imageId?: number | null
+}
+
+export interface ProduitUpdateFields {
+  type?: string
+  poids?: string
+  symbol?: string
+  description?: string
+  imageId?: number | null
 }
 
 export interface Gamme {
@@ -23,6 +41,7 @@ export interface Gamme {
   description: string
   ingredientsDetail: string
   hasPdfLabel: boolean
+  imageId: number | null
   image: string | null
   products: Product[]
 }
@@ -129,10 +148,24 @@ export function updateGamme(id: string, fields: GammeUpdateFields): Promise<void
   })
 }
 
-export function updateProduit(id: number, fields: Partial<Omit<Product, 'id'>>): Promise<void> {
+export function updateProduit(id: number, fields: ProduitUpdateFields): Promise<void> {
   return request('/api/produits/update.php', {
     method: 'POST',
     body: JSON.stringify({ id, ...fields }),
+  })
+}
+
+export function createProduit(gammeId: string, fields: ProduitCreateFields): Promise<Product> {
+  return request<Product>('/api/produits/create.php', {
+    method: 'POST',
+    body: JSON.stringify({ gammeId, ...fields }),
+  })
+}
+
+export function deleteProduit(id: number): Promise<void> {
+  return request('/api/produits/delete.php', {
+    method: 'POST',
+    body: JSON.stringify({ id }),
   })
 }
 

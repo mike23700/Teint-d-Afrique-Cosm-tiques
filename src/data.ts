@@ -1,10 +1,15 @@
 export type GammeId = 'eclat' | 'reparation' | 'hydratation' | 'nutrition'
 
 export interface Product {
+  // id / imageId / image : présents uniquement sur les produits venant de l'API
+  // (les produits du repli statique ci-dessous n'en ont pas — voir docs/plan.md §6.2).
+  id?: number
   type: string
   poids: string
   symbol: string
   description: string
+  imageId?: number | null
+  image?: string | null
 }
 
 export interface Gamme {

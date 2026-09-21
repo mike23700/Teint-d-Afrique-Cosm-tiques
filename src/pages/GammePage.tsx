@@ -54,7 +54,13 @@ function ProductCard({
         className="relative h-52 overflow-hidden"
         style={{ background: gamme.colorLight }}
       >
-        {pdfSrc ? (
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={`${gamme.nom} — ${product.type}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : pdfSrc ? (
           <iframe
             src={`${pdfSrc}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
             title={`Étiquette ${gamme.nom} — ${product.type}`}
@@ -230,13 +236,13 @@ export default function GammePage() {
                   color: gamme.colorDark,
                 }}
               >
-                Les 4 Produits
+                {gamme.products.length > 1 ? `Les ${gamme.products.length} Produits` : 'Le Produit'}
               </h2>
             </div>
             <div className="flex gap-2 flex-wrap justify-end">
               {gamme.products.map(p => (
                 <span
-                  key={p.type}
+                  key={p.id ?? p.type}
                   className="text-[10px] tracking-[0.1em] uppercase px-3 py-1 border"
                   style={{ color: gamme.colorDark, borderColor: gamme.color + '50' }}
                 >
@@ -249,7 +255,7 @@ export default function GammePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {gamme.products.map(product => (
               <ProductCard
-                key={product.type}
+                key={product.id ?? product.type}
                 product={product}
                 gamme={gamme}
                 pdfSrc={pdfSrc}

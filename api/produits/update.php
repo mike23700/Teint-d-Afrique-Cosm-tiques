@@ -43,6 +43,25 @@ foreach ($fields as $key) {
     $params[$key] = $clean;
 }
 
+// imageId : associe une image déjà présente dans la médiathèque (ou la retire avec null).
+if (array_key_exists('imageId', $body)) {
+    $imageId = $body['imageId'];
+    if ($imageId === null) {
+        $updates[] = 'image_id = NULL';
+    } elseif (is_int($imageId) || (is_string($imageId) && ctype_digit($imageId))) {
+        $imageId = (int)$imageId;
+        $media = $pdo->prepare('SELECT id FROM media WHERE id = :id');
+        $media->execute(['id' => $imageId]);
+        if (!$media->fetch()) {
+            json_error('invalid_image_id', 422);
+        }
+        $updates[] = 'image_id = :imageId';
+        $params['imageId'] = $imageId;
+    } else {
+        json_error('invalid_image_id', 422);
+    }
+}
+
 if (empty($updates)) {
     json_error('no_fields_to_update', 422);
 }

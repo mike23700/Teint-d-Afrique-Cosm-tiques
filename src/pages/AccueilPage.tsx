@@ -222,7 +222,7 @@ export default function AccueilPage() {
                     className="absolute bottom-4 right-4 px-3 py-1 text-white text-[9px] tracking-[0.2em] uppercase"
                     style={{ background: g.color }}
                   >
-                    4 produits
+                    {g.products.length} produit{g.products.length > 1 ? 's' : ''}
                   </div>
                 </div>
 
@@ -238,13 +238,13 @@ export default function AccueilPage() {
                     {g.description.slice(0, 180)}…
                   </p>
                   <div className="flex flex-wrap gap-2 mb-5">
-                    {['Savon · 180g', 'Lotion · 100ml', 'Crème · 100ml', 'Lait · 500ml'].map(p => (
+                    {g.products.map(p => (
                       <span
-                        key={p}
+                        key={p.id ?? p.type}
                         className="text-[10px] tracking-[0.1em] px-3 py-1 border"
                         style={{ color: g.colorDark, borderColor: g.color + '50' }}
                       >
-                        {p}
+                        {p.poids ? `${p.type} · ${p.poids}` : p.type}
                       </span>
                     ))}
                   </div>

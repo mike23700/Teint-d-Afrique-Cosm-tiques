@@ -73,22 +73,27 @@ Forme d'une gamme renvoyée par `list.php` / `get.php` :
   "description": "...",
   "ingredientsDetail": "...",
   "hasPdfLabel": true,
+  "imageId": null,
   "image": null,
   "products": [
-    { "id": 1, "type": "Savon", "poids": "180 g", "symbol": "◼", "description": "..." }
+    { "id": 1, "type": "Savon", "poids": "180 g", "symbol": "◼", "description": "...", "imageId": null, "image": null }
   ]
 }
 ```
 
-`image` vaut `null` tant qu'aucune photo n'a été téléversée via `/api/media/upload.php` puis associée à la gamme via `imageId` sur `gammes/update.php`.
+`image` (gamme ou produit) vaut `null` tant qu'aucune photo n'a été téléversée via `/api/media/upload.php` puis associée via `imageId`. Les produits sont triés par `position` croissante ; les nouveaux produits créés sont ajoutés en fin de liste.
 
-### Produits (écriture admin uniquement — la lecture passe par `gammes/list.php` ou `gammes/get.php`)
+### Produits (écriture admin — la lecture passe par `gammes/list.php` ou `gammes/get.php`)
 
 | Méthode | URL | Auth | Body | Réponse |
 |---|---|---|---|---|
-| POST | `/api/produits/update.php` | admin + CSRF | `{id, type?, poids?, symbol?, description?}` | `{updated: true}` |
+| POST | `/api/produits/create.php` | admin + CSRF | `{gammeId, type, poids?, symbol?, description}` | produit créé `{id, type, poids, symbol, description, imageId, image}` (HTTP 201) |
+| POST | `/api/produits/update.php` | admin + CSRF | `{id, type?, poids?, symbol?, description?, imageId?}` | `{updated: true}` |
+| POST | `/api/produits/delete.php` | admin + CSRF | `{id}` | `{deleted: true}` |
 
-`id` est l'identifiant numérique du produit tel que renvoyé dans `products[].id` par `gammes/list.php` / `gammes/get.php`.
+`gammeId` doit être l'une des 4 gammes (`eclat`, `reparation`, `hydratation`, `nutrition`). Le nouveau produit est placé en fin de liste (`position` = max + 1). `imageId` est l'id d'un média existant à associer au produit, ou `null` pour retirer l'image actuelle. `id` est l'identifiant numérique du produit tel que renvoyé dans `products[].id` par `gammes/list.php` / `gammes/get.php`.
+
+La suppression d'un produit est définitive. Symétriquement, la suppression d'un média est refusée (`409 media_in_use`) tant qu'une gamme **ou** un produit le référence encore.
 
 ### Contenu de pages (lecture publique, écriture admin)
 

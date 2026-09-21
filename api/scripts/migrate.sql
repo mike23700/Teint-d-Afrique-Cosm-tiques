@@ -58,8 +58,10 @@ CREATE TABLE IF NOT EXISTS produits (
   poids VARCHAR(50) NOT NULL,
   symbol VARCHAR(10) NOT NULL,
   description TEXT NOT NULL,
+  image_id INT UNSIGNED NULL,
   position INT NOT NULL DEFAULT 0,
-  CONSTRAINT fk_produits_gamme FOREIGN KEY (gamme_id) REFERENCES gammes (id) ON DELETE CASCADE
+  CONSTRAINT fk_produits_gamme FOREIGN KEY (gamme_id) REFERENCES gammes (id) ON DELETE CASCADE,
+  CONSTRAINT fk_produits_image FOREIGN KEY (image_id) REFERENCES media (id) ON DELETE SET NULL
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Blocs de contenu éditables des pages fixes (accueil, presentation, histoire, contact).

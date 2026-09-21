@@ -3,6 +3,7 @@ import { useGammes } from '@/hooks/useGammes'
 
 export default function BoutiquePage() {
   const GAMMES = useGammes()
+  const totalProduits = GAMMES.reduce((n, g) => n + g.products.length, 0)
 
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
@@ -24,7 +25,7 @@ export default function BoutiquePage() {
           </h1>
           <p className="text-[#FAF6EF]/60 max-w-lg leading-relaxed">
             Chaque gamme possède son univers, ses actifs botaniques et ses formules exclusives.
-            4 produits par gamme, pensés pour les peaux noires et métissées.
+            {totalProduits} produits au total, pensés pour les peaux noires et métissées.
           </p>
         </div>
       </div>
@@ -68,7 +69,7 @@ export default function BoutiquePage() {
                     className="absolute bottom-4 right-4 px-3 py-1 text-white text-[9px] tracking-[0.2em] uppercase"
                     style={{ background: g.color }}
                   >
-                    4 produits
+                    {g.products.length} produit{g.products.length > 1 ? 's' : ''}
                   </div>
                 </div>
 
@@ -91,13 +92,13 @@ export default function BoutiquePage() {
                   </p>
                   {/* Products list */}
                   <div className="flex flex-wrap gap-2 mb-5">
-                    {['Savon', 'Lotion', 'Crème', 'Lait'].map(p => (
+                    {g.products.map(p => (
                       <span
-                        key={p}
+                        key={p.id ?? p.type}
                         className="text-[10px] tracking-[0.1em] uppercase px-3 py-1 border"
                         style={{ color: g.colorDark, borderColor: g.color + '50' }}
                       >
-                        {p}
+                        {p.type}
                       </span>
                     ))}
                   </div>
@@ -140,8 +141,8 @@ export default function BoutiquePage() {
             </div>
             <div className="flex flex-col justify-center gap-4">
               {[
-                { label: '4 Gammes', desc: 'Éclat · Réparation · Hydratation · Nutrition' },
-                { label: '16 Produits', desc: '4 produits par gamme, formulés exclusivement' },
+                { label: `${GAMMES.length} Gammes`, desc: GAMMES.map(g => g.nom).join(' · ') },
+                { label: `${totalProduits} Produits`, desc: `Répartis dans les ${GAMMES.length} gammes, formulés exclusivement` },
                 { label: '100% Naturel', desc: "Ingrédients botaniques de la plus haute qualité" },
               ].map(stat => (
                 <div key={stat.label} className="border-l-2 border-[#C97B1A] pl-4">

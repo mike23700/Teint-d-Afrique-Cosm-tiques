@@ -25,8 +25,11 @@ if (!$media) {
     json_error('not_found', 404);
 }
 
-// Refuse la suppression tant qu'une gamme utilise encore cette image.
-$refStmt = $pdo->prepare('SELECT COUNT(*) FROM gammes WHERE image_id = :id');
+// Refuse la suppression tant qu'une gamme ou un produit utilise encore cette image.
+$refStmt = $pdo->prepare(
+    'SELECT (SELECT COUNT(*) FROM gammes WHERE image_id = :id)
+          + (SELECT COUNT(*) FROM produits WHERE image_id = :id) AS refs'
+);
 $refStmt->execute(['id' => $id]);
 if ((int)$refStmt->fetchColumn() > 0) {
     json_error('media_in_use', 409);
