@@ -90,8 +90,11 @@ Forme d'une gamme renvoyée par `list.php` / `get.php` :
 | POST | `/api/produits/create.php` | admin + CSRF | `{gammeId, type, poids?, symbol?, description}` | produit créé `{id, type, poids, symbol, description, imageId, image}` (HTTP 201) |
 | POST | `/api/produits/update.php` | admin + CSRF | `{id, type?, poids?, symbol?, description?, imageId?}` | `{updated: true}` |
 | POST | `/api/produits/delete.php` | admin + CSRF | `{id}` | `{deleted: true}` |
+| POST | `/api/produits/reorder.php` | admin + CSRF | `{gammeId, ids: [...]}` | `{reordered: true}` |
 
 `gammeId` doit être l'une des 4 gammes (`eclat`, `reparation`, `hydratation`, `nutrition`). Le nouveau produit est placé en fin de liste (`position` = max + 1). `imageId` est l'id d'un média existant à associer au produit, ou `null` pour retirer l'image actuelle. `id` est l'identifiant numérique du produit tel que renvoyé dans `products[].id` par `gammes/list.php` / `gammes/get.php`.
+
+`reorder.php` réattribue les positions de la gamme : `ids` contient les ids de produits dans le nouvel ordre (les produits absents du tableau sont replacés après, ordre relatif conservé). La validation refuse tout id qui n'appartient pas à la gamme (`product_not_in_gamme`), les doublons (`duplicate_ids`) et une gamme inconnue (`invalid_gamme_id`), et l'opération est atomique (transaction).
 
 La suppression d'un produit est définitive. Symétriquement, la suppression d'un média est refusée (`409 media_in_use`) tant qu'une gamme **ou** un produit le référence encore.
 

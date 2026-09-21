@@ -169,6 +169,14 @@ export function deleteProduit(id: number): Promise<void> {
   })
 }
 
+/** Réordonne les produits d'une gamme : `ids` = tous les ids dans le nouvel ordre. */
+export function reorderProduits(gammeId: string, ids: number[]): Promise<void> {
+  return request('/api/produits/reorder.php', {
+    method: 'POST',
+    body: JSON.stringify({ gammeId, ids }),
+  })
+}
+
 // --- Contenu de pages ---
 
 export function fetchContent(page: string): Promise<ContentBlock[]> {

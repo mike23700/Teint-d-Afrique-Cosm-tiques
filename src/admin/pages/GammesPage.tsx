@@ -7,11 +7,15 @@ import {
   fetchMedia,
   updateGamme,
   updateProduit,
+  reorderProduits,
   type Gamme,
   type MediaItem,
   type Product,
 } from '@/admin/api'
 import { Banner, Button, ColorInput, Field, TextArea, TextInput } from '@/admin/components/ui'
+
+/** Ordre local des produits par gamme (ids) ; source de vérité pour l'affichage des cartes. */
+type OrdreParGamme = Record<string, number[]>
 
 type GammeForm = {
   nom: string
@@ -49,6 +53,22 @@ export default function GammesPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [ordre, setOrdre] = useState<OrdreParGamme>({})
+
+  // Initialise/synchronise l'ordre local avec les produits chargés.
+  useEffect(() => {
+    setOrdre(prev => {
+      const next: OrdreParGamme = { ...prev }
+      for (const g of gammes) {
+        const connus = new Set(next[g.id] ?? [])
+        const ids = g.products.map(p => p.id)
+        if (next[g.id] === undefined || ids.some(id => !connus.has(id))) {
+          next[g.id] = ids
+        }
+      }
+      return next
+    })
+  }, [gammes])
 
   useEffect(() => {
     fetchGammes()
@@ -90,6 +110,10 @@ export default function GammesPage() {
 
   function handleProduitAdded(gammeId: string, produit: Product) {
     setGammes(prev => prev.map(g => (g.id === gammeId ? { ...g, products: [...g.products, produit] } : g)))
+    setOrdre(prev => ({
+      ...prev,
+      [gammeId]: [...(prev[gammeId] ?? []), produit.id],
+    }))
   }
 
   function handleProduitRemoved(gammeId: string, produitId: number) {
@@ -98,6 +122,14 @@ export default function GammesPage() {
         g.id === gammeId ? { ...g, products: g.products.filter(p => p.id !== produitId) } : g
       )
     )
+    setOrdre(prev => ({
+      ...prev,
+      [gammeId]: (prev[gammeId] ?? []).filter(id => id !== produitId),
+    }))
+  }
+
+  function handleOrdreChanged(gammeId: string, ids: number[]) {
+    setOrdre(prev => ({ ...prev, [gammeId]: ids }))
   }
 
   if (loading) return <p className="text-sm text-[#3B1705]/50">Chargement des gammes...</p>
@@ -132,6 +164,8 @@ export default function GammesPage() {
           onProduitImageChanged={(produitId, image) => handleProduitImageChanged(selected.id, produitId, image)}
           onProduitAdded={produit => handleProduitAdded(selected.id, produit)}
           onProduitRemoved={produitId => handleProduitRemoved(selected.id, produitId)}
+          ordre={ordre[selected.id] ?? selected.products.map(p => p.id)}
+          onOrdreChanged={ids => handleOrdreChanged(selected.id, ids)}
         />
       )}
     </div>
@@ -146,6 +180,8 @@ function GammeEditor({
   onProduitImageChanged,
   onProduitAdded,
   onProduitRemoved,
+  ordre,
+  onOrdreChanged,
 }: {
   gamme: Gamme
   onGammeSaved: (form: GammeForm) => void
@@ -154,6 +190,8 @@ function GammeEditor({
   onProduitImageChanged: (produitId: number, image: string | null) => void
   onProduitAdded: (produit: Product) => void
   onProduitRemoved: (produitId: number) => void
+  ordre: number[]
+  onOrdreChanged: (ids: number[]) => void
 }) {
   const [form, setForm] = useState<GammeForm>(toForm(gamme))
   const [saving, setSaving] = useState(false)
@@ -161,6 +199,27 @@ function GammeEditor({
   const [success, setSuccess] = useState(false)
   const [adding, setAdding] = useState(false)
   const [productsError, setProductsError] = useState<string | null>(null)
+
+  const produitsOrdonnes = ordre
+    .map(id => gamme.products.find(p => p.id === id))
+    .filter((p): p is Product => p !== undefined)
+
+  async function deplacer(produit: Product, direction: -1 | 1) {
+    const ids = [...ordre]
+    const i = ids.indexOf(produit.id)
+    const j = i + direction
+    if (i < 0 || j < 0 || j >= ids.length) return
+    ;[ids[i], ids[j]] = [ids[j], ids[i]]
+    onOrdreChanged(ids)
+    setProductsError(null)
+    try {
+      await reorderProduits(gamme.id, ids)
+    } catch (err) {
+      // Rollback visuel : on revient à l'ordre précédent.
+      onOrdreChanged(ordre)
+      setProductsError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+    }
+  }
 
   function set<K extends keyof GammeForm>(key: K, value: GammeForm[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -276,13 +335,17 @@ function GammeEditor({
           <p className="text-sm text-[#3B1705]/40">Aucun produit dans cette gamme pour l'instant.</p>
         ) : (
           <div className="grid md:grid-cols-2 gap-5">
-            {gamme.products.map(product => (
+            {produitsOrdonnes.map(product => (
               <ProduitEditor
                 key={product.id}
                 product={product}
                 onSaved={fields => onProduitSaved(product.id, fields)}
                 onImageChanged={image => onProduitImageChanged(product.id, image)}
                 onDelete={() => handleDeleteProduit(product)}
+                onMoveUp={() => deplacer(product, -1)}
+                onMoveDown={() => deplacer(product, 1)}
+                isFirst={product.id === ordre[0]}
+                isLast={product.id === ordre[ordre.length - 1]}
               />
             ))}
           </div>
@@ -371,11 +434,19 @@ function ProduitEditor({
   onSaved,
   onImageChanged,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }: {
   product: Product
   onSaved: (fields: Partial<Product>) => void
   onImageChanged: (image: string | null) => void
   onDelete: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  isFirst: boolean
+  isLast: boolean
 }) {
   const [form, setForm] = useState<ProduitForm>({
     type: product.type,
@@ -412,9 +483,31 @@ function ProduitEditor({
         <p className="text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 truncate">
           {product.type || 'Nouveau produit'}
         </p>
-        <Button variant="danger" onClick={onDelete}>
-          Supprimer
-        </Button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            title="Monter"
+            aria-label="Monter ce produit"
+            className="w-7 h-7 border border-[#3B1705]/25 text-[#3B1705] hover:bg-[#3B1705]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs"
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={isLast}
+            title="Descendre"
+            aria-label="Descendre ce produit"
+            className="w-7 h-7 border border-[#3B1705]/25 text-[#3B1705] hover:bg-[#3B1705]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs"
+          >
+            ▼
+          </button>
+          <Button variant="danger" onClick={onDelete}>
+            Supprimer
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
