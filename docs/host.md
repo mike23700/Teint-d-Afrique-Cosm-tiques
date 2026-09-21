@@ -70,28 +70,31 @@ Deux méthodes possibles depuis le panel :
 
 Le site utilise `createBrowserRouter` (React Router), qui gère la navigation côté client via l'historique du navigateur. Sans configuration serveur, un rechargement de page sur une URL comme `teintdafrique.com/boutique/eclat` renverra une 404 Apache, puisque ce fichier n'existe pas physiquement.
 
-Créer un fichier `.htaccess` à la racine du dossier web (`www`/`public_html`, au même niveau que `index.html`) avec ce contenu :
+La bonne nouvelle : **le fichier est déjà dans le dépôt** (`public/.htaccess`). Comme `vite build` recopie le dossier `public/` dans `dist/`, il se retrouve automatiquement dans le build et se déploie avec lui — rien à créer à la main. Il faut seulement vérifier qu'il est bien présent au document root (`www`/`public_html`, au même niveau que `index.html`) après l'upload.
+
+Son contenu (routage SPA **+** mapping des médias) :
 
 ```apacheconf
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
 
-  # Ne pas réécrire les fichiers/dossiers qui existent réellement (assets, images, etc.)
+  # Médias gérés par l'admin : servis depuis api/uploads/ sous /uploads/.
+  # (En dev, /uploads est un proxy Vite ; en prod, cette règle rétablit le mapping.)
+  RewriteRule ^uploads/(.+)$ api/uploads/$1 [L]
+
+  # L'API PHP ne doit jamais retomber sur la SPA.
+  RewriteCond %{REQUEST_URI} !^/api/
+
+# Ne pas réécrire les fichiers/dossiers qui existent réellement (assets, images, etc.)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
 
-  # Laisser passer les appels à l'API PHP (une fois le panneau d'admin déployé, voir plan.md)
-  # — /admin n'a pas besoin d'exclusion : c'est une route gérée par le même React Router que
-  # le reste du site (voir src/routes.tsx), donc elle doit retomber sur index.html comme les autres.
-  RewriteCond %{REQUEST_URI} !^/api/
-
   # Toutes les autres routes retombent sur index.html (SPA)
+  # — /admin n'a pas besoin d'exclusion : c'est une route gérée par le même React Router que
+  # le reste du site (voir src/routes.tsx), donc elle retombe sur index.html comme les autres.
   RewriteRule ^ index.html [L]
 </IfModule>
 ```
-
-À uploader manuellement (il n'est pas généré par `npm run build`).
 
 ## 5. SSL (HTTPS)
 
@@ -110,9 +113,10 @@ Recommandation : démarrer avec Cloudflare (gratuit, rapide à mettre en place) 
 1. **Base de données** : dans le panel, *Base de données & PHP → MySql & PhpMyadmin*, créer la base (1 seule disponible sur cette formule) et un utilisateur associé. Noter host, nom de base, utilisateur, mot de passe — **ne jamais les committer dans Git**.
 2. Importer le schéma (`api/scripts/migrate.sql`) via phpMyAdmin, puis exécuter le script de seed une seule fois (`api/scripts/seed.php`) pour reprendre le contenu actuel de `src/data.ts`.
 3. Créer un `api/config.php` sur le serveur (jamais dans le dépôt Git) à partir de `api/config.php.example`, avec les vrais identifiants MySQL.
-4. Uploader le dossier `api/` à la racine du site (`www/api/`), à côté du `dist/` déjà déployé à l'étape 3 de la section précédente.
+4. Uploader le dossier `api/` à la racine du site (`www/api/`), à côté du `dist/` déjà déployé à l'étape 3 de la section précédente. Le dossier contient déjà son durcissement : `api/.htaccess` (interdit `config.php`, `scripts/`, exécution PHP sous `uploads/`, listing de répertoire) et `api/.user.ini` (relève les limites PHP à 6 Mo pour l'upload d'images ≤ 5 Mo). Si le panel LWS montre que `.user.ini` n'est pas pris en compte (PHP en mod_php), régler les limites dans *Base de données & PHP → Configuration php*.
 5. Créer le premier compte admin (email + mot de passe) — via `api/scripts/seed.php` en ligne de commande si un accès shell est possible, sinon directement en base via phpMyAdmin (avec un hash généré via `password_hash()` en PHP), puis via l'écran de connexion ensuite.
-6. Résultat : `teintdafrique.com` affiche le site, `teintdafrique.com/admin` affiche l'écran de connexion de l'admin — un seul domaine, un seul déploiement front, comme prévu.
+6. **Activer HTTPS sur la session admin** : une fois le SSL effectif (étape 5), décommenter `// 'secure' => true,` dans `api/bootstrap.php` (ligne ~19) pour que le cookie de session ne circule qu'en HTTPS.
+7. Résultat : `teintdafrique.com` affiche le site, `teintdafrique.com/admin` affiche l'écran de connexion de l'admin — un seul domaine, un seul déploiement front, comme prévu. Les images uploadées via la médiathèque sont servies sous `/uploads/…` (réécrites vers `api/uploads/` par le `.htaccess` racine, voir §4).
 
 ## 7. Vérifications post-déploiement (à chaque mise en ligne)
 
@@ -122,7 +126,7 @@ Recommandation : démarrer avec Cloudflare (gratuit, rapide à mettre en place) 
    - la navigation entre les pages fonctionne,
    - un rechargement de page sur une route interne (ex. `/boutique/eclat`) ne renvoie pas de 404 (test du `.htaccess`),
    - les images et le logo se chargent.
-3. Si l'admin est déployé, tester une connexion et une modification simple de bout en bout.
+3. Si l'admin est déployé, tester une connexion et une modification simple de bout en bout, **y compris l'upload d'une image** en médiathèque puis la vérification que l'URL `/uploads/…` renvoyée s'affiche bien sur le site public (teste le mapping `uploads/ → api/uploads/` du `.htaccess` racine).
 
 ## 8. Bonnes pratiques de sécurité pour l'hébergement
 

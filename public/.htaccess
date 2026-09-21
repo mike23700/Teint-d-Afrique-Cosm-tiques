@@ -1,0 +1,21 @@
+# Teint d'Afrique Cosmétiques — hébergement Apache (LWS).
+# Ce fichier est copié automatiquement dans dist/ par `vite build` (dossier public/).
+# À poser au document root (www/ ou public_html/), au même niveau que index.html.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Médias gérés par l'admin : servis depuis api/uploads/ sous /uploads/.
+  # (En dev, /uploads est un proxy Vite ; en prod, cette règle rétablit le mapping.)
+  RewriteRule ^uploads/(.+)$ api/uploads/$1 [L]
+
+  # L'API PHP ne doit jamais retomber sur la SPA.
+  RewriteCond %{REQUEST_URI} !^/api/
+
+  # Ne pas réécrire les fichiers/dossiers qui existent réellement (assets, images, etc.)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Toutes les autres routes retombent sur index.html (SPA React Router)
+  RewriteRule ^ index.html [L]
+</IfModule>
