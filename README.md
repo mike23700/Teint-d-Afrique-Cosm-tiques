@@ -7,6 +7,10 @@ Le projet est composé de deux parties :
 - **Un frontend unique** (`src/`) — Réact + Vite + TS + Tailwind v4. Le site public **et** l'admin (`/admin`, chargé à la demande) font partie du même projet : un seul `npm install`, un seul build, un seul hébergement.
 - **Un backend PHP + MySQL** (`api/`) — petite API REST maison (sans framework), qui alimente le site public en données (gammes, textes, coordonnées) et permet à l'admin de tout modifier.
 
+## Quoi de neuf ?
+
+Le site est entièrement gérable depuis l'admin, sans toucher au code : produits (ajout, suppression, image, ordre par glisser-déposer), textes de toutes les pages (y compris mise en forme riche), images du hero et du portrait de l'accueil (import direct depuis l'ordinateur), ordre des gammes, coordonnées et réseaux sociaux. Le formulaire de contact fonctionne : les messages arrivent dans l'onglet « Messages » de l'admin (anti-spam intégré). Le détail des évolutions est dans le [CHANGELOG](CHANGELOG.md).
+
 ## Pages du site public
 
 - **Accueil** — présentation générale de la marque et de ses gammes
@@ -17,16 +21,21 @@ Le projet est composé de deux parties :
   - **RÉPARATION** — Huile de Marula & Collagène Marin
   - **HYDRATATION** — Aloe Vera & Concombre
   - **NUTRITION** — Beurre de Mangue & Huile d'Avocat
-- **Contact** — coordonnées (Douala, Cameroun), email, réseaux sociaux et WhatsApp
+- **Contact** — coordonnées (Douala, Cameroun), email, réseaux sociaux, WhatsApp et un
+  formulaire fonctionnel (les messages sont reçus dans l'admin)
 
 ## Admin (`/admin`)
 
 Connexion protégée (anti brute-force + CSRF), puis édition de :
 
-- **Gammes & produits** — 4 gammes, 4 produits chacune, couleurs, associations d'images
-- **Contenu des pages** — tous les blocs de texte (y compris les blocs enrichis « richtext »)
-- **Médiathèque** — upload d'images (réencodage serveur, 5 Mo max), alt, suppression
-- **Paramètres** — coordonnées de contact, WhatsApp, réseaux sociaux
+- **Gammes & produits** — couleurs, textes, images (import direct depuis le PC), ajout/suppression
+  de produits, réordonnancement par glisser-déposer (produits **et** gammes)
+- **Pages** — tous les blocs de texte (y compris les blocs enrichis « richtext ») et les images
+  du hero / portrait de l'accueil
+- **Messages** — les messages reçus via le formulaire de contact (lu/non lu, suppression,
+  réponse par email)
+- **Médiathèque** — gestion des images (réencodage serveur, 5 Mo max), alt, suppression
+- **Coordonnées** — téléphone, email, adresse, WhatsApp, réseaux sociaux
 
 Toute modification est visible sur le site public. Le site retombe silencieusement sur son contenu statique si l'API est indisponible (jamais de page blanche — voir `docs/plan.md` §6.2).
 
@@ -81,17 +90,18 @@ src/
 ├── data.ts                 # Source de vérité des types + contenu statique de repli
 ├── index.css               # CSS global + import Tailwind v4 + styles .rich-text
 ├── lib/api.ts              # Client API (fetch json, repli silencieux)
-├── hooks/                  # useGammes, useContent, useRichContent, useSettings
+├── hooks/                  # useGammes, useContent, useRichContent, useSettings,
+│                           # useContentImage
 ├── admin/                  # Panneau d'admin (LoginPage, GammesPage, ContentPage,
-│                           # MediaPage, SettingsPage, Layout, composants UI)
+│                           # MessagesPage, MediaPage, SettingsPage, Layout, UI)
 ├── components/             # Nav, Footer, Layout
 ├── pages/                  # Accueil, Présentation, Histoire, Boutique, Gamme, Contact
 └── imports/                # Assets de marque (logo, visuels, étiquettes produits)
 
 api/                        # Backend PHP + MySQL (voir api/README.md)
 ├── bootstrap.php           # Connexion PDO, CORS, sessions, sanitisation, helpers
-├── auth/ gammes/ produits/ content/ settings/ media/   # Routes REST
-├── scripts/migrate.sql     # Schéma de la base (7 tables)
+├── auth/ gammes/ produits/ content/ settings/ media/ contact/   # Routes REST
+├── scripts/migrate.sql     # Schéma de la base (8 tables)
 ├── scripts/seed.php        # Contenu initial + création du compte admin
 ├── config.php.example      # Modèle de config (host, user, pass…)
 └── uploads/                # Images uploadées via la médiathèque
@@ -103,10 +113,12 @@ docs/                       # plan.md (architecture), setup.md (guide de démarr
 
 ## Documentation
 
+- `CHANGELOG.md` — tout ce qui a été fait, lot par lot, avec les commits
 - `docs/plan.md` — architecture, répartition du travail, contrat des données
 - `docs/setup.md` — guide de démarrage complet, de zéro à l'environnement de dev
 - `docs/host.md` — procédure de mise en production sur l'hébergement LWS (DNS, SSL, upload)
-- `api/README.md` — détail de chaque endpoint de l'API (auth, gammes, contenu, médiathèque)
+- `api/README.md` — détail de chaque endpoint de l'API (auth, gammes, produits, contenu,
+  messages de contact, médiathèque)
 
 ## Origine du projet
 

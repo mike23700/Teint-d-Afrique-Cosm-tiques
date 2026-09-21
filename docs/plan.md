@@ -91,7 +91,8 @@ Base unique (celle fournie par la formule LWS). Toutes les tables en `utf8mb4_un
 | poids | VARCHAR(50) | ex. "180 g" |
 | symbol | VARCHAR(10) | glyphe utilisé dans l'UI (◼ ◻ ◇ ○) |
 | description | TEXT | |
-| position | INT | ordre au sein de la gamme |
+| image_id | INT NULL | FK → `media.id` (image de la carte produit) |
+| position | INT | ordre au sein de la gamme (modifiable par glisser-déposer) |
 
 ### `page_content`
 Contenu éditable des pages fixes (Accueil, Présentation, Notre Histoire, Contact), sous forme de blocs clé/valeur pour rester flexible sans migration à chaque nouveau champ.
@@ -106,6 +107,10 @@ Contenu éditable des pages fixes (Accueil, Présentation, Notre Histoire, Conta
 | updated_at | DATETIME | |
 
 Contrainte unique : (`page`, `block_key`).
+
+Les blocs de type `image` stockent l'id d'un média dans `value` (vide tant qu'aucune photo
+n'est importée) ; `content/list.php` y ajoute un champ `imageUrl` prêt à l'emploi. Deux blocs
+image existent pour l'accueil : `hero_image` et `fondatrice_image`.
 
 ### `settings`
 Table clé/valeur unique pour les coordonnées et réseaux sociaux.
@@ -127,6 +132,18 @@ Table clé/valeur unique pour les coordonnées et réseaux sociaux.
 | created_at | DATETIME | |
 
 Fichiers physiques stockés hors `public_html/api` dans un dossier `uploads/` servi statiquement, jamais dans un dossier exécutable PHP.
+
+### `contact_messages` (ajouté en lot 2)
+| Colonne | Type | Notes |
+|---|---|---|
+| id | INT PK AUTO_INCREMENT | |
+| name | VARCHAR(190) | expéditeur |
+| email | VARCHAR(190) | validé côté serveur |
+| phone | VARCHAR(50) | facultatif |
+| message | TEXT | max 5 000 caractères |
+| ip_address | VARCHAR(45) | sert à la limite anti-spam (5 msg / 10 min / IP) |
+| is_read | TINYINT(1) | suivi lu / non lu dans l'admin |
+| created_at | DATETIME | |
 
 **Seed initial** : Dev A écrit un script `api/scripts/seed.php` (exécuté une fois manuellement) qui recopie l'intégralité du contenu actuel de `src/data.ts` et des pages (`AccueilPage.tsx`, `PresentationPage.tsx`, `HistoirePage.tsx`, `ContactPage.tsx`) dans ces tables, pour que la mise en production n'efface aucun contenu existant.
 
@@ -172,6 +189,7 @@ api/
 - Toutes les routes de modification (`update.php`, `upload.php`, `delete.php`) doivent appeler un helper `require_admin()` qui coupe la requête (401) si aucune session valide.
 - **Protection brute-force** : limiter les tentatives de login (ex. verrou de 5 minutes après 5 échecs consécutifs par IP/email).
 - **CSRF** : un jeton CSRF généré à la connexion doit être renvoyé par le front sur chaque requête de modification (header `X-CSRF-Token`), vérifié côté serveur.
+- **Formulaire de contact public** : unique endpoint d'écriture publique du projet (`contact/submit.php`), protégé par une limite de débit par IP (5 messages / 10 minutes) et une validation stricte côté serveur ; les messages s'accumulent dans `contact_messages` et se lisent dans l'admin.
 - Aucun mot de passe, secret, ou identifiant de base de données ne doit apparaître dans le dépôt Git : `config.php` doit être listé dans `.gitignore`, seul `config.php.example` (avec des valeurs bidons) est commité.
 
 ### 5.3 Contrat API (JSON)

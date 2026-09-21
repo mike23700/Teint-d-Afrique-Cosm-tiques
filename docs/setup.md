@@ -55,7 +55,7 @@ Depuis la racine du projet :
 /opt/lampp/bin/mysql -u root < api/scripts/migrate.sql
 ```
 
-Ça crée la base `teint_dafrique` avec ses 6 tables (`admin_users`, `gammes`, `produits`, `page_content`, `settings`, `media`, `login_attempts`). Rien à modifier dans ce script.
+Ça crée la base `teint_dafrique` avec ses **8 tables** (`admin_users`, `gammes`, `produits`, `page_content`, `settings`, `media`, `login_attempts`, `contact_messages`). Rien à modifier dans ce script.
 
 ## 6. Configurer l'API
 
@@ -79,7 +79,7 @@ Exemple :
 /opt/lampp/bin/php api/scripts/seed.php prenom@teintdafrique.com UnMotDePasseSolide2026
 ```
 
-Choisis **ton propre** email et mot de passe (au moins 12 caractères) — ce compte n'existe que dans **ta** base MySQL locale, il n'a pas besoin d'être identique à celui d'un autre développeur. Le script reprend automatiquement le contenu actuel des 4 gammes/16 produits, une trentaine de blocs de texte des pages, et les coordonnées de contact.
+Choisis **ton propre** email et mot de passe (au moins 12 caractères) — ce compte n'existe que dans **ta** base MySQL locale, il n'a pas besoin d'être identique à celui d'un autre développeur. Le script reprend automatiquement le contenu actuel des 4 gammes/16 produits, les blocs de texte des pages (y compris les blocs image de l'accueil), et les coordonnées de contact.
 
 Le script refuse de s'exécuter si la table `gammes` contient déjà des données (protection anti-doublon en cas de relance accidentelle). Pour repartir de zéro :
 
@@ -124,7 +124,11 @@ Dans le build, tu dois voir un chunk séparé du type `AdminApp-xxxxx.js` (~20 K
 Ensuite, en navigateur :
 1. Va sur http://localhost:8443/admin, connecte-toi.
 2. Modifie un champ (ex. la tagline de la gamme ÉCLAT), enregistre.
-3. Va sur http://localhost:8443/, recharge la page : le changement doit apparaître (uniquement pour les textes déjà branchés à l'API — voir `plan.md` §6.2 et `../api/README.md` pour la liste).
+3. Va sur http://localhost:8443/, recharge la page : le changement doit apparaître.
+4. Teste aussi : l'ajout d'un produit (onglet Gammes), le glisser-déposer des produits et des
+   onglets de gammes, l'import d'image direct (bouton « Importer depuis l'ordinateur »),
+   l'envoi d'un message via le formulaire de contact public puis sa lecture dans l'onglet
+   « Messages » de l'admin.
 
 ## 11. Pièges fréquents
 
