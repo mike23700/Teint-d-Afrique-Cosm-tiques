@@ -1,7 +1,17 @@
 import { useState } from 'react'
+import { useContent } from '@/hooks/useContent'
+import { useSettings } from '@/hooks/useSettings'
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false)
+  const settings = useSettings()
+  const content = useContent('contact', {
+    intro_text:
+      "Nous sommes à votre écoute. Écrivez-nous, appelez-nous ou retrouvez-nous sur les réseaux sociaux.",
+    form_title: "Envoyez-nous un message",
+    form_success_message: "Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais.",
+  })
+  const whatsappHref = settings.whatsapp_number || 'https://wa.me/237000000000'
 
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
@@ -21,10 +31,7 @@ export default function ContactPage() {
           >
             Contact
           </h1>
-          <p className="text-[#FAF6EF]/60 max-w-md">
-            Nous sommes à votre écoute. Écrivez-nous, appelez-nous ou retrouvez-nous sur les réseaux
-            sociaux.
-          </p>
+          <p className="text-[#FAF6EF]/60 max-w-md">{content.intro_text}</p>
         </div>
       </div>
 
@@ -50,20 +57,20 @@ export default function ContactPage() {
                   {
                     label: 'Adresse',
                     icon: '◈',
-                    lines: ['Douala, Cameroun'],
+                    lines: [settings.contact_address],
                     href: undefined,
                   },
                   {
                     label: 'Email',
                     icon: '◉',
-                    lines: ['contact@teintdafrique.com'],
-                    href: 'mailto:contact@teintdafrique.com',
+                    lines: [settings.contact_email],
+                    href: `mailto:${settings.contact_email}`,
                   },
                   {
                     label: 'WhatsApp',
                     icon: '◎',
                     lines: ['Nous écrire sur WhatsApp'],
-                    href: 'https://wa.me/237000000000',
+                    href: whatsappHref,
                   },
                 ].map(item => (
                   <div key={item.label} className="flex gap-5 items-start">
@@ -103,21 +110,25 @@ export default function ContactPage() {
                 </p>
                 <div className="flex gap-3">
                   <a
-                    href="#"
+                    href={settings.facebook_url || '#'}
+                    target={settings.facebook_url ? '_blank' : undefined}
+                    rel={settings.facebook_url ? 'noopener noreferrer' : undefined}
                     aria-label="Facebook"
                     className="w-11 h-11 border border-[#3B1705]/20 flex items-center justify-center text-[#3B1705] text-[11px] uppercase tracking-widest hover:bg-[#3B1705] hover:text-white hover:border-[#3B1705] transition-all"
                   >
                     fb
                   </a>
                   <a
-                    href="#"
+                    href={settings.instagram_url || '#'}
+                    target={settings.instagram_url ? '_blank' : undefined}
+                    rel={settings.instagram_url ? 'noopener noreferrer' : undefined}
                     aria-label="Instagram"
                     className="w-11 h-11 border border-[#3B1705]/20 flex items-center justify-center text-[#3B1705] text-[11px] uppercase tracking-widest hover:bg-[#3B1705] hover:text-white hover:border-[#3B1705] transition-all"
                   >
                     ig
                   </a>
                   <a
-                    href="https://wa.me/237000000000"
+                    href={whatsappHref}
                     aria-label="WhatsApp"
                     className="w-11 h-11 flex items-center justify-center text-white text-[11px] uppercase tracking-widest hover:opacity-85 transition-opacity"
                     style={{ background: '#25D366' }}
@@ -160,7 +171,7 @@ export default function ContactPage() {
                     Message envoyé !
                   </h3>
                   <p className="text-[#FAF6EF]/60 text-sm leading-relaxed max-w-xs">
-                    Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais.
+                    {content.form_success_message}
                   </p>
                   <button
                     onClick={() => setSent(false)}
@@ -175,7 +186,7 @@ export default function ContactPage() {
                     className="text-[#FAF6EF] text-2xl mb-8"
                     style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
                   >
-                    Envoyez-nous un message
+                    {content.form_title}
                   </h3>
                   <form
                     className="space-y-5"

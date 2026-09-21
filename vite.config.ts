@@ -34,6 +34,18 @@ export default defineConfig(({ mode }) => {
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,
       watch: { ignored: ['**/.figma/**'] },
+      // Redirige les appels au backend PHP (voir api/README.md) vers le serveur de dev PHP local,
+      // pour que le site consomme /api et /uploads en chemin relatif comme en production (host.md).
+      // Le serveur PHP de dev a pour racine le dossier api/ (voir api/README.md), donc le préfixe
+      // /api est retiré avant transmission ; /uploads correspond déjà à api/uploads sans réécriture.
+      proxy: {
+        '/api': {
+          target: process.env.API_URL || 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/api/, ''),
+        },
+        '/uploads': { target: process.env.API_URL || 'http://localhost:8000', changeOrigin: true },
+      },
     },
     preview: {
       host: '0.0.0.0',

@@ -1,8 +1,13 @@
 import { Link } from 'react-router'
 import logo from '@/imports/TDA_LogoExe_CMJN.png'
-import { GAMMES } from '@/data'
+import { useGammes } from '@/hooks/useGammes'
+import { useSettings } from '@/hooks/useSettings'
 
 export default function Footer() {
+  const GAMMES = useGammes()
+  const settings = useSettings()
+  const whatsappHref = settings.whatsapp_number || 'https://wa.me/237000000000'
+
   return (
     <footer
       className="bg-[#2A1006] pt-16 pb-8"
@@ -25,21 +30,25 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               <a
-                href="#"
+                href={settings.facebook_url || '#'}
+                target={settings.facebook_url ? '_blank' : undefined}
+                rel={settings.facebook_url ? 'noopener noreferrer' : undefined}
                 aria-label="Facebook"
                 className="w-9 h-9 border border-[#FAF6EF]/15 flex items-center justify-center text-[#FAF6EF]/50 text-[11px] uppercase tracking-widest hover:bg-[#FAF6EF]/10 hover:text-[#FAF6EF] transition-all"
               >
                 fb
               </a>
               <a
-                href="#"
+                href={settings.instagram_url || '#'}
+                target={settings.instagram_url ? '_blank' : undefined}
+                rel={settings.instagram_url ? 'noopener noreferrer' : undefined}
                 aria-label="Instagram"
                 className="w-9 h-9 border border-[#FAF6EF]/15 flex items-center justify-center text-[#FAF6EF]/50 text-[11px] uppercase tracking-widest hover:bg-[#FAF6EF]/10 hover:text-[#FAF6EF] transition-all"
               >
                 ig
               </a>
               <a
-                href="https://wa.me/237000000000"
+                href={whatsappHref}
                 aria-label="WhatsApp"
                 className="w-9 h-9 flex items-center justify-center text-white text-[11px] uppercase tracking-widest hover:opacity-80 transition-opacity"
                 style={{ background: '#25D366' }}
@@ -100,21 +109,21 @@ export default function Footer() {
             <div className="flex flex-col gap-4">
               <div>
                 <p className="text-[#FAF6EF]/30 text-[10px] tracking-[0.2em] uppercase mb-1">Adresse</p>
-                <p className="text-[#FAF6EF]/65 text-sm">Douala, Cameroun</p>
+                <p className="text-[#FAF6EF]/65 text-sm">{settings.contact_address}</p>
               </div>
               <div>
                 <p className="text-[#FAF6EF]/30 text-[10px] tracking-[0.2em] uppercase mb-1">Email</p>
                 <a
-                  href="mailto:contact@teintdafrique.com"
+                  href={`mailto:${settings.contact_email}`}
                   className="text-[#FAF6EF]/65 text-sm hover:text-[#C97B1A] transition-colors break-all"
                 >
-                  contact@teintdafrique.com
+                  {settings.contact_email}
                 </a>
               </div>
               <div>
                 <p className="text-[#FAF6EF]/30 text-[10px] tracking-[0.2em] uppercase mb-2">WhatsApp</p>
                 <a
-                  href="https://wa.me/237000000000?text=Bonjour%20Teint%20d'Afrique%20Cosmétiques%2C%20je%20souhaite%20avoir%20des%20informations."
+                  href={`${whatsappHref}?text=Bonjour%20Teint%20d'Afrique%20Cosmétiques%2C%20je%20souhaite%20avoir%20des%20informations.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 text-white text-[11px] tracking-[0.15em] uppercase hover:opacity-85 transition-opacity"

@@ -1,7 +1,16 @@
 import { Link } from 'react-router'
-import { GAMMES } from '@/data'
+import { useGammes } from '@/hooks/useGammes'
+import { useContent } from '@/hooks/useContent'
 
 export default function AccueilPage() {
+  const GAMMES = useGammes()
+  const content = useContent('accueil', {
+    hero_subtitle:
+      "Des soins naturels pensés pour célébrer, nourrir et révéler la beauté authentique de la peau noire — sans jamais chercher à la changer.",
+    intro_paragraph_2:
+      "Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui déborde d'ambition pour la génération féminine actuelle et celles à venir.",
+  })
+
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
 
@@ -34,8 +43,7 @@ export default function AccueilPage() {
               DE L'OR.
             </h1>
             <p className="text-[#FAF6EF]/75 text-base md:text-lg leading-relaxed mb-10 max-w-lg">
-              Des soins naturels pensés pour célébrer, nourrir et révéler la beauté authentique de
-              la peau noire — sans jamais chercher à la changer.
+              {content.hero_subtitle}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -135,9 +143,7 @@ export default function AccueilPage() {
                 et la Diversité Culturelle.
               </p>
               <p className="text-[#2A1006]/75 leading-relaxed text-[15px] mb-8">
-                Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la
-                dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui déborde
-                d'ambition pour la génération féminine actuelle et celles à venir.
+                {content.intro_paragraph_2}
               </p>
               <Link
                 to="/presentation"

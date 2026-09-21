@@ -1,4 +1,14 @@
+import { useContent } from '@/hooks/useContent'
+
 export default function PresentationPage() {
+  const content = useContent('presentation', {
+    bio_paragraph_2:
+      "Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui déborde d'ambition pour la génération féminine actuelle et celles à venir.",
+    bio_paragraph_3:
+      "Diplômée de l'École Supérieure de Commerce de Paris (ISC Paris Business School) où elle a obtenu un Master avant de décrocher un MBA en Stratégie digitale à l'Institut Européen du Digital, Minette a également acquis les fondamentaux en cosmétologie de façon à pouvoir collaborer efficacement avec différents laboratoires spécialisés en cosmétiques naturels.",
+    quote: "« La blancheur a été érigée en norme universelle de progrès. »",
+  })
+
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
       {/* ── PAGE BANNER ── */}
@@ -57,19 +67,9 @@ export default function PresentationPage() {
                 africaine et la Diversité Culturelle.
               </p>
 
-              <p>
-                Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la
-                dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui
-                déborde d'ambition pour la génération féminine actuelle et celles à venir.
-              </p>
+              <p>{content.bio_paragraph_2}</p>
 
-              <p>
-                Diplômée de l'École Supérieure de Commerce de Paris (ISC Paris Business School) où
-                elle a obtenu un Master avant de décrocher un MBA en Stratégie digitale à l'Institut
-                Européen du Digital, Minette a également acquis les fondamentaux en cosmétologie de
-                façon à pouvoir collaborer efficacement avec différents laboratoires spécialisés en
-                cosmétiques naturels.
-              </p>
+              <p>{content.bio_paragraph_3}</p>
 
               <p>
                 Aujourd'hui, à travers{' '}
@@ -85,7 +85,7 @@ export default function PresentationPage() {
                   className="text-[#3B1705] text-lg italic"
                   style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
                 >
-                  « La blancheur a été érigée en norme universelle de progrès. »
+                  {content.quote}
                 </p>
               </blockquote>
 

@@ -1,4 +1,25 @@
+import { useContent } from '@/hooks/useContent'
+
 export default function HistoirePage() {
+  const content = useContent('histoire', {
+    intro_title:
+      "Teint d'Afrique Cosmétiques est une marque camerounaise de cosmétiques naturels, née d'une conviction simple et ferme : nous n'avons pas besoin d'éclaircir notre peau pour nous sentir belles.",
+    paragraph_1:
+      "Tout est parti d'un constat que nous ne pouvions plus ignorer. Trop de femmes abîment leur peau avec des produits éclaircissants, dans l'espoir d'un teint plus uniforme, plus lumineux — pour répondre à une idée de la beauté qui n'est pas la nôtre. Nous avons décidé d'ouvrir une autre voie.",
+    paragraph_2:
+      "Une cosmétique pensée pour les peaux noires et métissées. Qui les soigne, les nourrit, les révèle — sans jamais chercher à changer leur couleur.",
+    paragraph_3:
+      "Nous formulons nos soins à partir d'ingrédients naturels, puisés dans les richesses de notre terre : aloe vera, curcuma, carotte, citron, miel, beurre de karité. Chaque produit répond à un besoin réel de la peau : nettoyer, nourrir, hydrater, unifier le teint et révéler l'éclat naturel.",
+    paragraph_4:
+      "Nous avons commencé avec des moyens modestes et une exigence intacte. Cette exigence n'a jamais baissé. De là est née une marque qui grandit, portée par une ambition qui dépasse la cosmétique.",
+    paragraph_5:
+      "Car notre projet est aussi un projet de dignité : changer le regard porté sur la peau noire, encourager les femmes à prendre soin d'elles sans se dépigmenter, et prouver qu'on peut créer, en Afrique, des produits d'excellence inspirés de nos ressources, de nos besoins et de notre identité.",
+    closing_line_1: "Notre peau n'a pas besoin de devenir plus claire pour être belle.",
+    closing_line_2: "Elle a besoin d'être comprise, respectée et bien entretenue.",
+    closing_signature:
+      "C'est la vision que nous défendons, chaque jour, à travers Teint d'Afrique Cosmétiques.",
+  })
+
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
       {/* ── PAGE BANNER ── */}
@@ -29,59 +50,34 @@ export default function HistoirePage() {
             <div className="space-y-6 text-[#2A1006]/80 leading-relaxed text-[15px] md:text-base">
               <p className="text-[#3B1705] font-medium text-lg leading-relaxed"
                 style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
-                Teint d'Afrique Cosmétiques est une marque camerounaise de cosmétiques naturels,
-                née d'une conviction simple et ferme : nous n'avons pas besoin d'éclaircir notre
-                peau pour nous sentir belles.
+                {content.intro_title}
               </p>
 
-              <p>
-                Tout est parti d'un constat que nous ne pouvions plus ignorer. Trop de femmes
-                abîment leur peau avec des produits éclaircissants, dans l'espoir d'un teint plus
-                uniforme, plus lumineux — pour répondre à une idée de la beauté qui n'est pas la
-                nôtre. Nous avons décidé d'ouvrir une autre voie.
-              </p>
+              <p>{content.paragraph_1}</p>
 
-              <p>
-                Une cosmétique pensée pour les peaux noires et métissées. Qui les soigne, les
-                nourrit, les révèle — sans jamais chercher à changer leur couleur.
-              </p>
+              <p>{content.paragraph_2}</p>
 
-              <p>
-                Nous formulons nos soins à partir d'ingrédients naturels, puisés dans les richesses
-                de notre terre : aloe vera, curcuma, carotte, citron, miel, beurre de karité. Chaque
-                produit répond à un besoin réel de la peau : nettoyer, nourrir, hydrater, unifier le
-                teint et révéler l'éclat naturel.
-              </p>
+              <p>{content.paragraph_3}</p>
 
-              <p>
-                Nous avons commencé avec des moyens modestes et une exigence intacte. Cette exigence
-                n'a jamais baissé. De là est née une marque qui grandit, portée par une ambition qui
-                dépasse la cosmétique.
-              </p>
+              <p>{content.paragraph_4}</p>
 
-              <p>
-                Car notre projet est aussi un projet de dignité : changer le regard porté sur la
-                peau noire, encourager les femmes à prendre soin d'elles sans se dépigmenter, et
-                prouver qu'on peut créer, en Afrique, des produits d'excellence inspirés de nos
-                ressources, de nos besoins et de notre identité.
-              </p>
+              <p>{content.paragraph_5}</p>
 
               <div className="py-8 px-6 my-8" style={{ background: '#3B170508', borderLeft: '3px solid #C97B1A' }}>
                 <p
                   className="text-[#3B1705] text-lg leading-relaxed"
                   style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
                 >
-                  Notre peau n'a pas besoin de devenir plus claire pour être belle.
+                  {content.closing_line_1}
                 </p>
                 <p
                   className="text-[#3B1705] text-lg leading-relaxed mt-2"
                   style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
                 >
-                  Elle a besoin d'être comprise, respectée et bien entretenue.
+                  {content.closing_line_2}
                 </p>
                 <p className="text-[#C97B1A] text-sm mt-4">
-                  C'est la vision que nous défendons, chaque jour, à travers Teint d'Afrique
-                  Cosmétiques.
+                  {content.closing_signature}
                 </p>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router'
 import Layout from '@/components/Layout'
 import AccueilPage from '@/pages/AccueilPage'
@@ -6,6 +7,24 @@ import HistoirePage from '@/pages/HistoirePage'
 import BoutiquePage from '@/pages/BoutiquePage'
 import GammePage from '@/pages/GammePage'
 import ContactPage from '@/pages/ContactPage'
+
+// Chargé en lazy : le code de l'admin (formulaires, appels API d'écriture...) ne doit pas
+// alourdir le bundle téléchargé par les visiteurs du site public qui ne vont jamais sur /admin.
+const AdminApp = lazy(() => import('@/admin/AdminApp'))
+
+function AdminRoute() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-sm text-[#3B1705]/50">
+          Chargement...
+        </div>
+      }
+    >
+      <AdminApp />
+    </Suspense>
+  )
+}
 
 export const router = createBrowserRouter([
   {
@@ -39,5 +58,10 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  {
+    // Hors du Layout public (pas de Nav/Footer) : l'admin gère sa propre mise en page.
+    path: 'admin/*',
+    Component: AdminRoute,
   },
 ])

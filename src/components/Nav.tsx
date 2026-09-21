@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
 import logo from '@/imports/TDA_LogoExe_CMJN.png'
-import { GAMMES } from '@/data'
+import { useGammes } from '@/hooks/useGammes'
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [shopDropdown, setShopDropdown] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const GAMMES = useGammes()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)

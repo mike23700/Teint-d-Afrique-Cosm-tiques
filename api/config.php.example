@@ -1,0 +1,22 @@
+<?php
+// Copiez ce fichier en config.php et renseignez les vraies valeurs.
+// config.php ne doit JAMAIS être commité (voir .gitignore) : il contient des secrets.
+
+return [
+    'db' => [
+        'host' => '127.0.0.1',
+        'port' => 3306,
+        'name' => 'teint_dafrique',
+        'user' => 'root',
+        'pass' => '',
+        'charset' => 'utf8mb4',
+    ],
+    // Origines autorisées à appeler l'API avec des identifiants (cookies de session).
+    // Le site public ET l'admin sont servis depuis la même origine (l'admin vit sous /admin,
+    // voir host.md) : une seule entrée par environnement suffit.
+    'cors_origins' => [
+        'http://localhost:8443',
+        'https://teintdafrique.com',
+    ],
+    'session_name' => 'tda_admin_session',
+];

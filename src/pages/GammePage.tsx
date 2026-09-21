@@ -1,15 +1,25 @@
 import { Link, useParams } from 'react-router'
-import { GAMMES } from '@/data'
+import type { Gamme, Product } from '@/data'
+import { useGammes } from '@/hooks/useGammes'
+import { useSettings } from '@/hooks/useSettings'
 import eclatLabelPdf from '@/imports/260821_EtiquetteFacing_Eclat_Lotion.pdf'
 import nutritionLabelPdf from '@/imports/260821_EtiquetteFacing_Nourrissante_Creme.pdf'
 
-function WhatsAppOrderButton({ product, gamme }: { product: (typeof GAMMES)[0]['products'][0]; gamme: (typeof GAMMES)[0] }) {
+function WhatsAppOrderButton({
+  product,
+  gamme,
+  whatsappNumber,
+}: {
+  product: Product
+  gamme: Gamme
+  whatsappNumber: string
+}) {
   const message = encodeURIComponent(
     `Bonjour Teint d'Afrique Cosmétiques, je souhaite commander le ${product.type} (${product.poids}) de la gamme ${gamme.nom} — ${gamme.ingredients}. Pouvez-vous m'indiquer la disponibilité et les modalités de commande ? Merci.`
   )
   return (
     <a
-      href={`https://wa.me/237000000000?text=${message}`}
+      href={`${whatsappNumber}?text=${message}`}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center justify-center gap-2 w-full py-3 text-white text-[11px] tracking-[0.15em] uppercase font-medium hover:opacity-85 active:scale-[0.98] transition-all mt-4"
@@ -27,10 +37,12 @@ function ProductCard({
   product,
   gamme,
   pdfSrc,
+  whatsappNumber,
 }: {
-  product: (typeof GAMMES)[0]['products'][0]
-  gamme: (typeof GAMMES)[0]
+  product: Product
+  gamme: Gamme
   pdfSrc?: string
+  whatsappNumber: string
 }) {
   return (
     <div
@@ -85,7 +97,7 @@ function ProductCard({
           </span>
         </div>
         <p className="text-[13px] text-[#2A1006]/65 leading-relaxed flex-1">{product.description}</p>
-        <WhatsAppOrderButton product={product} gamme={gamme} />
+        <WhatsAppOrderButton product={product} gamme={gamme} whatsappNumber={whatsappNumber} />
       </div>
     </div>
   )
@@ -93,6 +105,9 @@ function ProductCard({
 
 export default function GammePage() {
   const { gammeId } = useParams<{ gammeId: string }>()
+  const GAMMES = useGammes()
+  const settings = useSettings()
+  const whatsappNumber = settings.whatsapp_number || 'https://wa.me/237000000000'
   const gamme = GAMMES.find(g => g.id === gammeId)
 
   if (!gamme) {
@@ -238,6 +253,7 @@ export default function GammePage() {
                 product={product}
                 gamme={gamme}
                 pdfSrc={pdfSrc}
+                whatsappNumber={whatsappNumber}
               />
             ))}
           </div>

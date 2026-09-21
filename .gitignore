@@ -19,3 +19,8 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Backend admin (api/) — voir plan.md et api/README.md
+api/config.php
+api/uploads/*
+!api/uploads/.gitkeep

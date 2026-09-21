@@ -1,7 +1,9 @@
 import { Link } from 'react-router'
-import { GAMMES } from '@/data'
+import { useGammes } from '@/hooks/useGammes'
 
 export default function BoutiquePage() {
+  const GAMMES = useGammes()
+
   return (
     <div style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}>
       {/* ── PAGE BANNER ── */}
