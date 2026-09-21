@@ -28,6 +28,35 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Rendering des blocs "richtext" du CMS (voir src/hooks/useRichContent.ts).
+ * Le HTML est sanitisé côté serveur (liste blanche api/bootstrap.php) ; on retravaille
+ * ici les balises autorisées pour rester fidèles à la charte des pages statiques.
+ */
+.rich-text p {
+  margin: 0 0 0.75rem;
+}
+.rich-text p:last-child {
+  margin-bottom: 0;
+}
+.rich-text strong {
+  color: #3b1705;
+  font-weight: 600;
+}
+.rich-text ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+.rich-text li {
+  margin: 0.15rem 0;
+}
+.rich-text a {
+  color: #c97b1a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Hide scrollbar, show on hover */
 ::-webkit-scrollbar {
   width: 6px;

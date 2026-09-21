@@ -1,14 +1,23 @@
 import { Link } from 'react-router'
 import { useGammes } from '@/hooks/useGammes'
 import { useContent } from '@/hooks/useContent'
+import { useRichContent } from '@/hooks/useRichContent'
 
 export default function AccueilPage() {
   const GAMMES = useGammes()
   const content = useContent('accueil', {
     hero_subtitle:
       "Des soins naturels pensés pour célébrer, nourrir et révéler la beauté authentique de la peau noire — sans jamais chercher à la changer.",
+    intro_title: 'Une femme, une conviction, une marque.',
     intro_paragraph_2:
       "Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui déborde d'ambition pour la génération féminine actuelle et celles à venir.",
+  })
+  const fondatrice = useContent('presentation', {
+    fondatrice_nom: 'Minette KAMDEM',
+  })
+  const rich = useRichContent('accueil', {
+    intro_paragraph_1:
+      "<p>Créatrice de la marque <strong>#TeintdAfriqueCosmetiques</strong>, épouse et mère, <strong>Minette KAMDEM</strong> est une Femme Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité africaine et la Diversité Culturelle.</p>",
   })
 
   return (
@@ -112,7 +121,7 @@ export default function AccueilPage() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#2A1006]/65 to-transparent px-5 py-6">
                 <p className="text-white text-xl" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
-                  Minette KAMDEM
+                  {fondatrice.fondatrice_nom}
                 </p>
                 <p className="text-[#C97B1A] text-[9px] tracking-[0.3em] uppercase mt-1">
                   Fondatrice & Créatrice
@@ -133,15 +142,11 @@ export default function AccueilPage() {
                   fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)',
                 }}
               >
-                Une femme, une conviction,<br />une marque.
+                {content.intro_title}
               </h2>
-              <p className="text-[#2A1006]/75 leading-relaxed text-[15px] mb-5">
-                Créatrice de la marque <strong className="text-[#3B1705]">#TeintdAfriqueCosmetiques</strong>,
-                épouse et mère, <strong className="text-[#3B1705]">Minette KAMDEM</strong> est une Femme
-                Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en
-                s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité africaine
-                et la Diversité Culturelle.
-              </p>
+              <div className="rich-text text-[#2A1006]/75 leading-relaxed text-[15px] mb-5">
+                <div dangerouslySetInnerHTML={rich.intro_paragraph_1} />
+              </div>
               <p className="text-[#2A1006]/75 leading-relaxed text-[15px] mb-8">
                 {content.intro_paragraph_2}
               </p>

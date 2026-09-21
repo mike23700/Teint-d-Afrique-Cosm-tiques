@@ -1,12 +1,27 @@
 import { useContent } from '@/hooks/useContent'
+import { useRichContent } from '@/hooks/useRichContent'
 
 export default function PresentationPage() {
   const content = useContent('presentation', {
+    fondatrice_nom: 'Minette KAMDEM',
+    fondatrice_titre: 'Fondatrice & Créatrice — #TeintdAfriqueCosmetiques',
     bio_paragraph_2:
       "Femme de caractère, fervente défenseur de la peau noire et farouche opposante à la dénaturation de la peau noire, Minette est, avant tout, une femme dévouée qui déborde d'ambition pour la génération féminine actuelle et celles à venir.",
     bio_paragraph_3:
       "Diplômée de l'École Supérieure de Commerce de Paris (ISC Paris Business School) où elle a obtenu un Master avant de décrocher un MBA en Stratégie digitale à l'Institut Européen du Digital, Minette a également acquis les fondamentaux en cosmétologie de façon à pouvoir collaborer efficacement avec différents laboratoires spécialisés en cosmétiques naturels.",
     quote: "« La blancheur a été érigée en norme universelle de progrès. »",
+  })
+  const rich = useRichContent('presentation', {
+    bio_paragraph_1:
+      "<p>Créatrice de la marque <strong>#TeintdAfriqueCosmetiques</strong>, épouse et mère, <strong>Minette KAMDEM</strong> est une Femme Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité africaine et la Diversité Culturelle.</p>",
+    bio_paragraph_4:
+      "<p>Aujourd'hui, à travers <strong>#TeintdAfriqueCosmetiques</strong>, elle souhaite cristalliser son ambition, son rêve. Un rêve né d'un constat, mieux d'une frustration. Car elle a constaté que bon nombre de produits cosmétiques existants et destinés à la peau noire conduisent à l'éclaircissement forcé de celle-ci et par ricochet, à sa dégradation.</p>",
+    bio_paragraph_5:
+      "<p>Pour Minette, nous devons conserver notre authenticité quelle que soit notre carnation comme le dit le slogan de la marque, <strong>« #VOTRE_PEAU_VAUT_DE_LOR »</strong>. Après maintes réflexions, elle décide, il y a 3 ans, d'agir pour opérer une déconstruction. La mission de <strong>#Teint_dAfrique_Cosmétiques</strong> consiste justement à changer les mentalités et contribuer à la révolution en marche de la beauté noire.</p>",
+    bio_paragraph_6:
+      "<p><strong>#Teint_dAfrique_Cosmétiques</strong>, est la marque de produits cosmétiques naturels qui s'engage à respecter votre couleur de peau et à ennoblir votre beauté grâce à des ingrédients botaniques et végétaux de la plus haute qualité et à des prix défiants toute concurrence ! Ses produits naturels sont adaptés pour tous les types de peau.</p>",
+    bio_paragraph_7:
+      "<p>Pour chaque produit, nous relevons le défi de créer des formules uniques et innovantes en utilisant exclusivement des options naturelles. En trois mots, <strong>#TeintdAfriqueCosmetiques</strong> se veut être une marque <strong>#AUTHENTIQUE</strong>, <strong>#PLURIELLE</strong> et <strong>#INCLUSIVE</strong>.</p>",
   })
 
   return (
@@ -48,37 +63,23 @@ export default function PresentationPage() {
                   className="text-white text-2xl"
                   style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
                 >
-                  Minette KAMDEM
+                  {content.fondatrice_nom}
                 </p>
                 <p className="text-[#C97B1A] text-[9px] tracking-[0.3em] uppercase mt-1">
-                  Fondatrice & Créatrice — #TeintdAfriqueCosmetiques
+                  {content.fondatrice_titre}
                 </p>
               </div>
             </div>
 
             {/* Verbatim text from brief */}
             <div className="order-1 md:order-2 space-y-6 text-[#2A1006]/80 leading-relaxed text-[15px] md:text-base">
-              <p>
-                Créatrice de la marque{' '}
-                <strong className="text-[#3B1705]">#TeintdAfriqueCosmetiques</strong>, épouse et
-                mère, <strong className="text-[#3B1705]">Minette KAMDEM</strong> est une Femme
-                Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en
-                s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité
-                africaine et la Diversité Culturelle.
-              </p>
+              <div className="rich-text" dangerouslySetInnerHTML={rich.bio_paragraph_1} />
 
               <p>{content.bio_paragraph_2}</p>
 
               <p>{content.bio_paragraph_3}</p>
 
-              <p>
-                Aujourd'hui, à travers{' '}
-                <strong className="text-[#3B1705]">#TeintdAfriqueCosmetiques</strong>, elle souhaite
-                cristalliser son ambition, son rêve. Un rêve né d'un constat, mieux d'une
-                frustration. Car elle a constaté que bon nombre de produits cosmétiques existants et
-                destinés à la peau noire conduisent à l'éclaircissement forcé de celle-ci et par
-                ricochet, à sa dégradation.
-              </p>
+              <div className="rich-text" dangerouslySetInnerHTML={rich.bio_paragraph_4} />
 
               <blockquote className="pl-5 border-l-2 border-[#C97B1A] my-8">
                 <p
@@ -89,34 +90,11 @@ export default function PresentationPage() {
                 </p>
               </blockquote>
 
-              <p>
-                Pour Minette, nous devons conserver notre authenticité quelle que soit notre
-                carnation comme le dit le slogan de la marque,{' '}
-                <strong className="text-[#C97B1A]">«&nbsp;#VOTRE_PEAU_VAUT_DE_LOR&nbsp;»</strong>.
-                Après maintes réflexions, elle décide, il y a 3 ans, d'agir pour opérer une
-                déconstruction. La mission de{' '}
-                <strong className="text-[#3B1705]">#Teint_dAfrique_Cosmétiques</strong> consiste
-                justement à changer les mentalités et contribuer à la révolution en marche de la
-                beauté noire.
-              </p>
+              <div className="rich-text" dangerouslySetInnerHTML={rich.bio_paragraph_5} />
 
-              <p>
-                <strong className="text-[#3B1705]">#Teint_dAfrique_Cosmétiques</strong>, est la
-                marque de produits cosmétiques naturels qui s'engage à respecter votre couleur de
-                peau et à ennoblir votre beauté grâce à des ingrédients botaniques et végétaux de la
-                plus haute qualité et à des prix défiants toute concurrence ! Ses produits naturels
-                sont adaptés pour tous les types de peau.
-              </p>
+              <div className="rich-text" dangerouslySetInnerHTML={rich.bio_paragraph_6} />
 
-              <p>
-                Pour chaque produit, nous relevons le défi de créer des formules uniques et
-                innovantes en utilisant exclusivement des options naturelles. En trois mots,{' '}
-                <strong className="text-[#3B1705]">#TeintdAfriqueCosmetiques</strong> se veut être
-                une marque{' '}
-                <strong className="text-[#C97B1A]">#AUTHENTIQUE</strong>,{' '}
-                <strong className="text-[#C97B1A]">#PLURIELLE</strong> et{' '}
-                <strong className="text-[#C97B1A]">#INCLUSIVE</strong>.
-              </p>
+              <div className="rich-text" dangerouslySetInnerHTML={rich.bio_paragraph_7} />
 
               {/* Credentials */}
               <div className="pt-6 border-t border-[#3B1705]/10">
