@@ -4,6 +4,12 @@ import ImagePicker from '@/admin/components/ImagePicker'
 import { Banner, Button, Field, TextArea } from '@/admin/components/ui'
 import { DEFAULT_CONTENT_IMAGES } from '@/data'
 
+/** Aide affichée sous certains blocs texte dont le rendu sur le site suit une convention. */
+const BLOCK_HINTS: Record<string, string> = {
+  'accueil.hero_title':
+    'Chaque retour à la ligne crée une ligne du titre. Entourez un mot d’astérisques pour le mettre en doré, ex. *VAUT*.',
+}
+
 /** Libellés lisibles des blocs image (sinon la clé technique est affichée). */
 const IMAGE_LABELS: Record<string, string> = {
   'accueil.hero_image': "Grande photo d'accueil",
@@ -70,6 +76,8 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  // Dernière valeur enregistrée : sert à griser « Enregistrer » tant que rien n'a changé.
+  const [savedValue, setSavedValue] = useState(block.value)
   const [imageUrl, setImageUrl] = useState(block.imageUrl ?? null)
 
   if (block.blockType === 'image') {
@@ -97,6 +105,7 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
     setError(null)
     try {
       await updateContent(page, block.blockKey, value)
+      setSavedValue(value)
       setSuccess(true)
     } catch (err) {
       setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
@@ -109,7 +118,7 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
     <div className="bg-white border border-[#3B1705]/10 p-5 space-y-3">
       <Field label={`${block.blockKey} (${block.blockType})`}>
         <TextArea
-          rows={block.blockType === 'richtext' ? 4 : 2}
+          rows={block.blockType === 'richtext' ? 4 : Math.max(2, value.split('\n').length)}
           value={value}
           onChange={e => {
             setValue(e.target.value)
@@ -117,6 +126,9 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
           }}
         />
       </Field>
+      {BLOCK_HINTS[`${page}.${block.blockKey}`] && (
+        <p className="text-xs text-[#3B1705]/40">{BLOCK_HINTS[`${page}.${block.blockKey}`]}</p>
+      )}
       {block.blockType === 'richtext' && (
         <p className="text-xs text-[#3B1705]/40">
           Balises HTML autorisées : &lt;p&gt; &lt;strong&gt; &lt;em&gt; &lt;br&gt; &lt;ul&gt; &lt;li&gt; &lt;a&gt; — le
@@ -125,7 +137,7 @@ function BlockEditor({ page, block }: { page: string; block: ContentBlock }) {
       )}
       {error && <p className="text-xs text-red-700">{error}</p>}
       {success && <p className="text-xs text-emerald-700">Enregistré.</p>}
-      <Button variant="secondary" onClick={handleSave} disabled={saving || value === block.value}>
+      <Button variant="secondary" onClick={handleSave} disabled={saving || value === savedValue}>
         {saving ? 'Enregistrement...' : 'Enregistrer'}
       </Button>
     </div>

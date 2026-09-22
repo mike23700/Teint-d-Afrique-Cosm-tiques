@@ -132,7 +132,7 @@ foreach ($gammes as $gamme) {
 // src/pages/*.tsx. Les blocs marqués "richtext" contiennent les mêmes emphases (<strong>)
 // que le JSX d'origine ; tous les autres sont du texte brut.
 $pageContent = [
-    ['page' => 'accueil', 'block_key' => 'hero_title', 'block_type' => 'text', 'value' => "VOTRE PEAU VAUT DE L'OR."],
+    ['page' => 'accueil', 'block_key' => 'hero_title', 'block_type' => 'text', 'value' => "VOTRE PEAU\n*VAUT*\nDE L'OR."],
     ['page' => 'accueil', 'block_key' => 'hero_subtitle', 'block_type' => 'text', 'value' => "Des soins naturels pensés pour célébrer, nourrir et révéler la beauté authentique de la peau noire — sans jamais chercher à la changer."],
     ['page' => 'accueil', 'block_key' => 'intro_title', 'block_type' => 'text', 'value' => "Une femme, une conviction, une marque."],
     ['page' => 'accueil', 'block_key' => 'intro_paragraph_1', 'block_type' => 'richtext', 'value' => "<p>Créatrice de la marque <strong>#TeintdAfriqueCosmetiques</strong>, épouse et mère, <strong>Minette KAMDEM</strong> est une Femme Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité africaine et la Diversité Culturelle.</p>"],

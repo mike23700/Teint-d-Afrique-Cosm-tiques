@@ -5,9 +5,34 @@ import { DEFAULT_CONTENT_IMAGES } from '@/data'
 import { useContent } from '@/hooks/useContent'
 import { useRichContent } from '@/hooks/useRichContent'
 
+/**
+ * Titre du hero éditable depuis l'admin (bloc accueil.hero_title) : chaque retour à la ligne
+ * est une ligne du titre, et les mots entourés d'astérisques (*VAUT*) sont mis en doré.
+ */
+function HeroTitle({ text }: { text: string }) {
+  const lines = text.split(/\r?\n/).filter(line => line.trim() !== '')
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={i}>
+          {i > 0 && <br />}
+          {line.split(/(\*[^*]+\*)/).map((part, j) =>
+            part.startsWith('*') && part.endsWith('*') && part.length > 2 ? (
+              <span key={j} style={{ color: '#C97B1A' }}>{part.slice(1, -1)}</span>
+            ) : (
+              part
+            )
+          )}
+        </span>
+      ))}
+    </>
+  )
+}
+
 export default function AccueilPage() {
   const GAMMES = useGammes()
   const content = useContent('accueil', {
+    hero_title: "VOTRE PEAU\n*VAUT*\nDE L'OR.",
     hero_subtitle:
       "Des soins naturels pensés pour célébrer, nourrir et révéler la beauté authentique de la peau noire — sans jamais chercher à la changer.",
     intro_title: 'Une femme, une conviction, une marque.',
@@ -51,9 +76,7 @@ export default function AccueilPage() {
                 fontSize: 'clamp(3rem, 8vw, 7rem)',
               }}
             >
-              VOTRE PEAU<br />
-              <span style={{ color: '#C97B1A' }}>VAUT</span><br />
-              DE L'OR.
+              <HeroTitle text={content.hero_title} />
             </h1>
             <p className="text-[#FAF6EF]/75 text-base md:text-lg leading-relaxed mb-10 max-w-lg">
               {content.hero_subtitle}
