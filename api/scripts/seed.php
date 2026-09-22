@@ -51,7 +51,7 @@ $gammes = [
         'ingredients' => 'Curcuma & Carotte', 'color' => '#C97B1A', 'color_light' => '#FEF3DC', 'color_dark' => '#7A4800',
         'description' => "La gamme ÉCLAT puise dans la puissance ancestrale du curcuma et de la carotte pour révéler l'éclat naturel de votre peau. Ces actifs dorés, utilisés depuis des siècles dans nos traditions africaines, unifient le teint, atténuent les imperfections et offrent une luminosité incomparable — sans jamais altérer votre couleur naturelle.",
         'ingredients_detail' => "Curcuma — puissant antioxydant, éclairant naturel reconnu depuis des siècles dans les traditions africaines et asiatiques. Carotte — riche en bêta-carotène, elle nourrit, unifie et illumine le teint en profondeur.",
-        'has_pdf_label' => 1, 'position' => 1,
+        'position' => 1,
         'produits' => [
             ['type' => 'Savon', 'poids' => '180 g', 'symbol' => '◼', 'description' => "Savon purifiant enrichi aux extraits de curcuma et de carotte. Nettoie en douceur tout en déposant les actifs éclairants dès le premier contact. Unifie progressivement le teint et laisse la peau lumineuse."],
             ['type' => 'Lotion Visage', 'poids' => '100 ml', 'symbol' => '◻', 'description' => "TEINT UNIFIÉ. Lotion légère aux extraits de carotte et curcuma. S'absorbe rapidement pour illuminer et unifier le teint au quotidien. À utiliser après le savon pour une synergie éclat optimale."],
@@ -64,7 +64,7 @@ $gammes = [
         'ingredients' => 'Huile de Marula & Collagène Marin', 'color' => '#8B3A52', 'color_light' => '#FCF0F3', 'color_dark' => '#5A1F32',
         'description' => "La gamme RÉPARATION associe la précieuse huile de Marula — surnommée « l'or liquide de l'Afrique australe » — au collagène marin pour régénérer en profondeur les peaux abîmées, fatiguées ou agressées. Une alliance de luxe naturel et de science moderne, formulée exclusivement pour la beauté africaine.",
         'ingredients_detail' => "Huile de Marula — pénètre sans résidu gras, régénère et protège contre les agressions extérieures. Collagène Marin — renforce l'élasticité cutanée, réduit les ridules et améliore le rebond de la peau.",
-        'has_pdf_label' => 0, 'position' => 2,
+        'position' => 2,
         'produits' => [
             ['type' => 'Savon', 'poids' => '180 g', 'symbol' => '◼', 'description' => "Savon réparateur à l'huile de Marula. Élimine les impuretés tout en déposant les actifs régénérants dès le nettoyage. Idéal pour les peaux abîmées, il initie le processus de restauration cutanée dès la première utilisation."],
             ['type' => 'Lotion', 'poids' => '100 ml', 'symbol' => '◻', 'description' => "Lotion régénérante post-soin à l'huile de Marula. Légère et pénétrante, elle restaure la barrière cutanée et prépare la peau à recevoir les soins suivants. Utiliser après le savon pour une synergie réparatrice optimale."],
@@ -77,7 +77,7 @@ $gammes = [
         'ingredients' => 'Aloe Vera & Concombre', 'color' => '#2A7A4F', 'color_light' => '#E8F5EE', 'color_dark' => '#1A4E33',
         'description' => "La gamme HYDRATATION allie la légèreté rafraîchissante du concombre à la puissance hydratante de l'aloe vera. Ensemble, ils forment un bouclier d'hydratation qui retient l'eau, apaise les irritations et laisse la peau fraîche, souple et lumineuse tout au long de la journée — quelle que soit la chaleur tropicale.",
         'ingredients_detail' => "Aloe Vera — hydratation profonde, apaisement immédiat, propriétés cicatrisantes et anti-inflammatoires naturelles. Concombre — effet fraîcheur instantané, réduit les gonflements et illumine le teint sans agresser.",
-        'has_pdf_label' => 0, 'position' => 3,
+        'position' => 3,
         'produits' => [
             ['type' => 'Savon', 'poids' => '180 g', 'symbol' => '◼', 'description' => "Savon fraîcheur à l'aloe vera et au concombre. Nettoie en douceur et laisse une sensation de fraîcheur immédiate. Idéal pour les peaux sensibles ou les climats chauds, il prépare la peau à absorber les soins hydratants suivants."],
             ['type' => 'Lotion', 'poids' => '100 ml', 'symbol' => '◻', 'description' => "Lotion hydratante légère à l'aloe vera. Formule aquatique qui sature la peau en eau et lui apporte tonus et légèreté. À utiliser matin et soir pour maintenir le niveau d'hydratation optimal de la peau."],
@@ -90,7 +90,7 @@ $gammes = [
         'ingredients' => "Beurre de Mangue & Huile d'Avocat", 'color' => '#6B7C2A', 'color_light' => '#F2F5E0', 'color_dark' => '#3E4A18',
         'description' => "La gamme NUTRITION célèbre les trésors nourriciers de la nature tropicale : le beurre de mangue, riche en vitamines A et E, s'allie à l'huile d'avocat pour pénétrer en profondeur et nourrir intensément les peaux les plus sèches. Un soin de fond qui transforme durablement la texture et l'éclat de votre peau.",
         'ingredients_detail' => "Beurre de Mangue — ultra-nourrissant, concentré en vitamines A et E, laisse la peau soyeuse et rayonnante. Huile d'Avocat — pénètre en profondeur, régénère et assouplit durablement les peaux les plus sèches.",
-        'has_pdf_label' => 1, 'position' => 4,
+        'position' => 4,
         'produits' => [
             ['type' => 'Savon', 'poids' => '180 g', 'symbol' => '◼', 'description' => "Savon nourrissant au beurre de mangue. Transforme le moment du soin en une expérience sensorielle riche tout en enveloppant la peau d'une douceur incomparable. Idéal pour les peaux sèches qui ont besoin de nutrition dès le nettoyage."],
             ['type' => 'Lotion', 'poids' => '100 ml', 'symbol' => '◻', 'description' => "Lotion nutritive corps au beurre de mangue et huile d'avocat. Légère mais intensément nourrissante, elle prépare et complète l'action de la crème pour une nutrition continue et un éclat durable tout au long de la journée."],
@@ -101,8 +101,8 @@ $gammes = [
 ];
 
 $insertGamme = $pdo->prepare(
-    'INSERT INTO gammes (id, nom, tagline, ingredients, color, color_light, color_dark, description, ingredients_detail, has_pdf_label, position)
-     VALUES (:id, :nom, :tagline, :ingredients, :color, :color_light, :color_dark, :description, :ingredients_detail, :has_pdf_label, :position)'
+    'INSERT INTO gammes (id, nom, tagline, ingredients, color, color_light, color_dark, description, ingredients_detail, position)
+     VALUES (:id, :nom, :tagline, :ingredients, :color, :color_light, :color_dark, :description, :ingredients_detail, :position)'
 );
 $insertProduit = $pdo->prepare(
     'INSERT INTO produits (gamme_id, type, poids, symbol, description, position)

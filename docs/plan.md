@@ -78,7 +78,6 @@ Base unique (celle fournie par la formule LWS). Toutes les tables en `utf8mb4_un
 | description | TEXT | |
 | ingredients_detail | TEXT | |
 | image_id | INT NULL | FK → `media.id` |
-| has_pdf_label | TINYINT(1) | |
 | position | INT | ordre d'affichage |
 | updated_at | DATETIME | |
 

@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ApiError,
+  createGamme,
   createProduit,
+  deleteGamme,
   deleteProduit,
   fetchGammes,
   updateGamme,
   updateProduit,
   reorderProduits,
   reorderGammes,
-  uploadMedia,
   type Gamme,
-  type MediaItem,
   type Product,
 } from '@/admin/api'
-import { Banner, Button, ColorInput, Field, TextArea, TextInput } from '@/admin/components/ui'
+import ImagePicker from '@/admin/components/ImagePicker'
+import { Banner, Button, ColorInput, Field, TextArea, TextInput, useConfirm } from '@/admin/components/ui'
+import { defaultGammeImage } from '@/hooks/useGammes'
 
 /** Ordre local des produits par gamme (ids) ; source de vérité pour l'affichage des cartes. */
 type OrdreParGamme = Record<string, number[]>
@@ -58,31 +60,67 @@ export default function GammesPage() {
   // Glisser-déposer des onglets gammes.
   const [dragGammeId, setDragGammeId] = useState<string | null>(null)
   const [overGammeId, setOverGammeId] = useState<string | null>(null)
+  // Erreurs de la barre d'onglets (réordonnancement, création) : affichées au-dessus de l'éditeur,
+  // sans masquer la page comme le ferait loadError.
+  const [tabsError, setTabsError] = useState<string | null>(null)
+  const [newGammeNom, setNewGammeNom] = useState('')
+  const [creating, setCreating] = useState(false)
 
   function handleGammeDrop(targetId: string) {
     const source = dragGammeId
     setDragGammeId(null)
     setOverGammeId(null)
     if (!source || source === targetId) return
-    const ids = gammes.map(g => g.id)
-    const from = ids.indexOf(source)
-    const to = ids.indexOf(targetId)
+    const previous = gammes
+    const from = previous.findIndex(g => g.id === source)
+    const to = previous.findIndex(g => g.id === targetId)
     if (from < 0 || to < 0) return
-    ids.splice(from, 1)
-    ids.splice(to, 0, source)
-    setGammes(prev => {
-      const next = [...prev]
-      next.splice(from, 1)
-      next.splice(to, 0, prev[from])
-      return next
+    const next = [...previous]
+    next.splice(from, 1)
+    next.splice(to, 0, previous[from])
+    setGammes(next)
+    setTabsError(null)
+    reorderGammes(next.map(g => g.id)).catch(err => {
+      // Rollback visuel : on revient à l'ordre précédent.
+      setGammes(previous)
+      setTabsError(
+        err instanceof ApiError
+          ? `Impossible de réordonner les gammes (${err.code}).`
+          : 'Impossible de réordonner les gammes.'
+      )
     })
-    reorderGammes(ids).catch(() => {
-      setLoadError('Impossible de réordonner les gammes.')
-      setLoadError(null)
+  }
+
+  async function handleCreateGamme() {
+    const nom = newGammeNom.trim()
+    if (!nom) return
+    setCreating(true)
+    setTabsError(null)
+    try {
+      const gamme = await createGamme(nom)
+      setGammes(prev => [...prev, gamme])
+      setSelectedId(gamme.id)
+      setNewGammeNom('')
+    } catch (err) {
+      setTabsError(err instanceof ApiError ? `Impossible de créer la gamme (${err.code}).` : 'Impossible de créer la gamme.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  function handleGammeDeleted(id: string) {
+    const remaining = gammes.filter(g => g.id !== id)
+    setGammes(remaining)
+    setSelectedId(remaining[0]?.id ?? null)
+    setOrdre(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
     })
   }
 
   // Initialise/synchronise l'ordre local avec les produits chargés.
+
   useEffect(() => {
     setOrdre(prev => {
       const next: OrdreParGamme = { ...prev }
@@ -206,11 +244,35 @@ export default function GammesPage() {
         Astuce : glissez-déposez les onglets pour changer l'ordre des gammes sur la boutique.
       </p>
 
+      <form
+        className="flex gap-2 items-center -mt-2"
+        onSubmit={e => {
+          e.preventDefault()
+          handleCreateGamme()
+        }}
+      >
+        <div className="w-64">
+          <TextInput
+            value={newGammeNom}
+            onChange={e => setNewGammeNom(e.target.value)}
+            placeholder="Nom de la nouvelle gamme"
+            maxLength={100}
+          />
+        </div>
+        <Button type="submit" variant="secondary" disabled={creating || !newGammeNom.trim()}>
+          {creating ? 'Création...' : '+ Nouvelle gamme'}
+        </Button>
+      </form>
+
+      {tabsError && <Banner kind="error">{tabsError}</Banner>}
+
       {selected && (
         <GammeEditor
           key={selected.id}
           gamme={selected}
           onGammeSaved={form => handleGammeSaved(selected.id, form)}
+          onGammeDeleted={() => handleGammeDeleted(selected.id)}
+          canDelete={gammes.length > 1}
           onImageChanged={image => handleImageChanged(selected.id, image)}
           onProduitSaved={(produitId, fields) => handleProduitSaved(selected.id, produitId, fields)}
           onProduitImageChanged={(produitId, image) => handleProduitImageChanged(selected.id, produitId, image)}
@@ -227,6 +289,8 @@ export default function GammesPage() {
 function GammeEditor({
   gamme,
   onGammeSaved,
+  onGammeDeleted,
+  canDelete,
   onImageChanged,
   onProduitSaved,
   onProduitImageChanged,
@@ -237,6 +301,8 @@ function GammeEditor({
 }: {
   gamme: Gamme
   onGammeSaved: (form: GammeForm) => void
+  onGammeDeleted: () => void
+  canDelete: boolean
   onImageChanged: (image: string | null) => void
   onProduitSaved: (produitId: number, fields: Partial<Product>) => void
   onProduitImageChanged: (produitId: number, image: string | null) => void
@@ -250,6 +316,8 @@ function GammeEditor({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirm, confirmModal] = useConfirm()
   const [productsError, setProductsError] = useState<string | null>(null)
   // Glisser-déposer : id du produit en cours de déplacement + id de la carte survolée.
   const [dragId, setDragId] = useState<number | null>(null)
@@ -291,6 +359,19 @@ function GammeEditor({
   }
 
   async function handleSave() {
+    // Même règle que api/gammes/update.php, vérifiée ici pour afficher un message clair.
+    const couleurs = [
+      ['Couleur', form.color],
+      ['Couleur claire', form.colorLight],
+      ['Couleur foncée', form.colorDark],
+    ] as const
+    const invalide = couleurs.find(([, v]) => !/^#[0-9A-Fa-f]{6}$/.test(v))
+    if (invalide) {
+      setSuccess(false)
+      setError(`« ${invalide[0]} » doit être au format #RRGGBB (ex. #C97B1A).`)
+      return
+    }
+
     setSaving(true)
     setError(null)
     try {
@@ -301,6 +382,35 @@ function GammeEditor({
       setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDeleteGamme() {
+    const n = gamme.products.length
+    const ok = await confirm({
+      title: 'Supprimer la gamme ?',
+      message: (
+        <>
+          La gamme <strong>« {gamme.nom} »</strong>
+          {n > 0 && <> et ses <strong>{n} produit{n > 1 ? 's' : ''}</strong></>} seront supprimés
+          du site. Cette action est définitive.
+        </>
+      ),
+      confirmLabel: 'Supprimer la gamme',
+    })
+    if (!ok) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteGamme(gamme.id)
+      onGammeDeleted()
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.code === 'last_gamme'
+          ? 'Impossible de supprimer la dernière gamme.'
+          : err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.'
+      )
+      setDeleting(false)
     }
   }
 
@@ -323,7 +433,17 @@ function GammeEditor({
   }
 
   async function handleDeleteProduit(produit: Product) {
-    if (!window.confirm(`Supprimer « ${produit.type} » de la gamme ? Cette action est immédiate.`)) return
+    const ok = await confirm({
+      title: 'Supprimer le produit ?',
+      message: (
+        <>
+          Le produit <strong>« {produit.type} »</strong> sera retiré de la gamme {gamme.nom}. Cette
+          action est définitive.
+        </>
+      ),
+      confirmLabel: 'Supprimer le produit',
+    })
+    if (!ok) return
     setProductsError(null)
     try {
       await deleteProduit(produit.id)
@@ -335,6 +455,7 @@ function GammeEditor({
 
   return (
     <div className="space-y-8">
+      {confirmModal}
       <section className="bg-white border border-[#3B1705]/10 p-6 space-y-5">
         <h2 className="text-xl" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
           Gamme {gamme.nom}
@@ -365,9 +486,10 @@ function GammeEditor({
           <TextArea rows={3} value={form.ingredientsDetail} onChange={e => set('ingredientsDetail', e.target.value)} />
         </Field>
 
-        <MediaPicker
-          label="Image (import direct depuis l'ordinateur)"
+        <ImagePicker
+          label="Image de la gamme"
           currentImage={gamme.image}
+          fallbackImage={defaultGammeImage(gamme)}
           onPick={async media => {
             await updateGamme(gamme.id, { imageId: media?.id ?? null })
             onImageChanged(media?.url ?? null)
@@ -377,9 +499,16 @@ function GammeEditor({
         {error && <Banner kind="error">{error}</Banner>}
         {success && <Banner kind="success">Gamme enregistrée.</Banner>}
 
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? 'Enregistrement...' : 'Enregistrer la gamme'}
-        </Button>
+        <div className="flex items-center justify-between gap-4">
+          <Button onClick={handleSave} disabled={saving || deleting}>
+            {saving ? 'Enregistrement...' : 'Enregistrer la gamme'}
+          </Button>
+          {canDelete && (
+            <Button variant="danger" onClick={handleDeleteGamme} disabled={saving || deleting}>
+              {deleting ? 'Suppression...' : 'Supprimer la gamme'}
+            </Button>
+          )}
+        </div>
       </section>
 
       <section>
@@ -402,6 +531,7 @@ function GammeEditor({
               <ProduitEditor
                 key={product.id}
                 product={product}
+                gammeImage={gamme.image ?? defaultGammeImage(gamme)}
                 onSaved={fields => onProduitSaved(product.id, fields)}
                 onImageChanged={image => onProduitImageChanged(product.id, image)}
                 onDelete={() => handleDeleteProduit(product)}
@@ -423,124 +553,9 @@ function GammeEditor({
   )
 }
 
-function MediaPicker({
-  label,
-  currentImage,
-  onPick,
-}: {
-  label: string
-  currentImage: string | null
-  onPick: (media: MediaItem | null) => Promise<void>
-}) {
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const ERROR_MESSAGES: Record<string, string> = {
-    file_too_large: 'Image trop lourde (5 Mo maximum).',
-    unsupported_file_type: 'Format non supporté (jpeg, png ou webp uniquement).',
-    invalid_image: "Le fichier n'est pas une image valide.",
-    upload_failed: "L'envoi a échoué, réessayez.",
-  }
-
-  async function importFile(file: File) {
-    setSaving(true)
-    setError(null)
-    try {
-      // Import direct depuis le PC : téléverse l'image puis l'associe en un seul geste.
-      const { id, url } = await uploadMedia(file, '')
-      await onPick({
-        id,
-        url,
-        originalName: file.name,
-        mimeType: file.type,
-        sizeBytes: file.size,
-        altText: '',
-        createdAt: new Date().toISOString(),
-      })
-    } catch (err) {
-      const code = err instanceof ApiError ? err.code : 'erreur_inconnue'
-      setError(ERROR_MESSAGES[code] ?? 'Une erreur est survenue, réessayez.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div>
-      <p className="block text-[11px] tracking-[0.15em] uppercase text-[#3B1705]/60 mb-2">{label}</p>
-      {currentImage && (
-        <img src={currentImage} alt="" className="w-32 h-24 object-cover border border-[#3B1705]/10 mb-3" />
-      )}
-      <div
-        onDragOver={e => {
-          e.preventDefault()
-          setDragOver(true)
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={e => {
-          e.preventDefault()
-          setDragOver(false)
-          if (saving) return
-          const file = e.dataTransfer.files?.[0]
-          if (file) importFile(file)
-        }}
-        className={`border border-dashed p-4 text-center transition-colors ${
-          dragOver ? 'border-[#C97B1A] bg-[#C97B1A]/5' : 'border-[#3B1705]/25'
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={e => {
-            const file = e.target.files?.[0]
-            if (file && !saving) importFile(file)
-            if (inputRef.current) inputRef.current.value = ''
-          }}
-        />
-        {saving ? (
-          <p className="text-sm text-[#3B1705]/60">Import en cours...</p>
-        ) : (
-          <>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => inputRef.current?.click()}
-            >
-              Importer depuis l'ordinateur
-            </Button>
-            <p className="text-[11px] text-[#3B1705]/40 mt-2">
-              ou glissez-déposez une image ici (jpeg, png, webp — 5 Mo max)
-            </p>
-          </>
-        )}
-      </div>
-      {currentImage && (
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={saving}
-          onClick={() => {
-            setError(null)
-            onPick(null).catch(err =>
-              setError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
-            )
-          }}
-          className="mt-2"
-        >
-          Retirer l'image
-        </Button>
-      )}
-      {error && <p className="text-xs text-red-700 mt-2">{error}</p>}
-    </div>
-  )
-}
-
 function ProduitEditor({
   product,
+  gammeImage,
   onSaved,
   onImageChanged,
   onDelete,
@@ -552,6 +567,8 @@ function ProduitEditor({
   isDropTarget,
 }: {
   product: Product
+  /** Image affichée par le site pour ce produit tant qu'il n'a pas la sienne. */
+  gammeImage: string
   onSaved: (fields: Partial<Product>) => void
   onImageChanged: (image: string | null) => void
   onDelete: () => void
@@ -649,9 +666,11 @@ function ProduitEditor({
         <TextArea rows={3} value={form.description} onChange={e => set('description', e.target.value)} />
       </Field>
 
-      <MediaPicker
-        label="Image du produit (import direct depuis l'ordinateur)"
+      <ImagePicker
+        label="Image du produit"
         currentImage={product.image}
+        fallbackImage={gammeImage}
+        fallbackLabel="Image de la gamme"
         onPick={async media => {
           await updateProduit(product.id, { imageId: media?.id ?? null })
           onImageChanged(media?.url ?? null)

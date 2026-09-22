@@ -6,12 +6,14 @@ import {
   setContactMessageRead,
   type ContactMessage,
 } from '@/admin/api'
-import { Banner, Button } from '@/admin/components/ui'
+import { Banner, Button, useConfirm } from '@/admin/components/ui'
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<ContactMessage[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'tous' | 'non-lus'>('tous')
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [confirm, confirmModal] = useConfirm()
 
   function reload() {
     fetchContactMessages()
@@ -23,23 +25,34 @@ export default function MessagesPage() {
 
   async function toggleRead(message: ContactMessage) {
     const isRead = !(message.isRead === true || message.isRead === 1)
+    setActionError(null)
     try {
       await setContactMessageRead(message.id, isRead)
       setMessages(prev =>
         prev ? prev.map(m => (m.id === message.id ? { ...m, isRead: isRead ? 1 : 0 } : m)) : prev
       )
     } catch (err) {
-      alert(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+      setActionError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     }
   }
 
   async function handleDelete(message: ContactMessage) {
-    if (!window.confirm(`Supprimer le message de « ${message.name} » ? Cette action est définitive.`)) return
+    const ok = await confirm({
+      title: 'Supprimer le message ?',
+      message: (
+        <>
+          Le message de <strong>« {message.name} »</strong> sera supprimé. Cette action est définitive.
+        </>
+      ),
+      confirmLabel: 'Supprimer le message',
+    })
+    if (!ok) return
+    setActionError(null)
     try {
       await deleteContactMessage(message.id)
       setMessages(prev => (prev ? prev.filter(m => m.id !== message.id) : prev))
     } catch (err) {
-      alert(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
+      setActionError(err instanceof ApiError ? `Erreur : ${err.code}` : 'Erreur inattendue.')
     }
   }
 
@@ -50,6 +63,8 @@ export default function MessagesPage() {
 
   return (
     <div className="space-y-6">
+      {confirmModal}
+      {actionError && <Banner kind="error">{actionError}</Banner>}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-2">
           {(['tous', 'non-lus'] as const).map(f => (

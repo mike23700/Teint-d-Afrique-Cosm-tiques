@@ -1,13 +1,11 @@
 import type { ReactNode } from 'react'
 import { Button } from './ui'
 
-export type Tab = 'gammes' | 'contenu' | 'messages' | 'media' | 'reglages'
+export type Tab = 'gammes' | 'contenu' | 'reglages'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'gammes', label: 'Gammes' },
   { id: 'contenu', label: 'Pages' },
-  { id: 'messages', label: 'Messages' },
-  { id: 'media', label: 'Médiathèque' },
   { id: 'reglages', label: 'Coordonnées' },
 ]
 

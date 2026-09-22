@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { useGammes } from '@/hooks/useGammes'
 import { useContentImage } from '@/hooks/useContentImage'
+import { DEFAULT_CONTENT_IMAGES } from '@/data'
 import { useContent } from '@/hooks/useContent'
 import { useRichContent } from '@/hooks/useRichContent'
 
@@ -16,8 +17,8 @@ export default function AccueilPage() {
   const fondatrice = useContent('presentation', {
     fondatrice_nom: 'Minette KAMDEM',
   })
-  const heroImage = useContentImage('accueil', 'hero_image', 'https://images.unsplash.com/photo-1577746838851-816a43ca8733?w=1600&h=1000&fit=crop&auto=format')
-  const fondatriceImage = useContentImage('accueil', 'fondatrice_image', 'https://images.unsplash.com/photo-1632765866070-3fadf25d3d5b?w=700&h=850&fit=crop&auto=format')
+  const heroImage = useContentImage('accueil', 'hero_image', DEFAULT_CONTENT_IMAGES['accueil.hero_image'])
+  const fondatriceImage = useContentImage('accueil', 'fondatrice_image', DEFAULT_CONTENT_IMAGES['accueil.fondatrice_image'])
   const rich = useRichContent('accueil', {
     intro_paragraph_1:
       "<p>Créatrice de la marque <strong>#TeintdAfriqueCosmetiques</strong>, épouse et mère, <strong>Minette KAMDEM</strong> est une Femme Camerounaise qui rêve de restaurer l'identité et l'image de la femme africaine en s'impliquant activement sur les sujets tels que l'Acceptation de soi, la Dignité africaine et la Diversité Culturelle.</p>",

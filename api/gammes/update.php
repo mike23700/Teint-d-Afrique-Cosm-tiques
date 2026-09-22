@@ -13,9 +13,13 @@ require_csrf();
 $body = read_json_body();
 $id = trim((string)($body['id'] ?? ''));
 
-// Les 4 gammes sont un ensemble fixe (voir docs/plan.md) : on modifie leur contenu, on n'en crée pas de nouvelles.
-$allowedIds = ['eclat', 'reparation', 'hydratation', 'nutrition'];
-if (!in_array($id, $allowedIds, true)) {
+// La gamme doit exister (les 4 d'origine ou une gamme créée via gammes/create.php).
+if ($id === '') {
+    json_error('invalid_gamme_id', 422);
+}
+$existsStmt = db()->prepare('SELECT id FROM gammes WHERE id = :id');
+$existsStmt->execute(['id' => $id]);
+if (!$existsStmt->fetch()) {
     json_error('invalid_gamme_id', 422);
 }
 

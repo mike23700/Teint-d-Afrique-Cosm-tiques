@@ -16,7 +16,7 @@ $pdo = db();
 $stmt = $pdo->prepare(
     'SELECT g.id, g.nom, g.tagline, g.ingredients, g.color, g.color_light AS colorLight,
             g.color_dark AS colorDark, g.description, g.ingredients_detail AS ingredientsDetail,
-            g.has_pdf_label AS hasPdfLabel, g.image_id AS imageId, m.filename AS imageFilename
+            g.image_id AS imageId, m.filename AS imageFilename
      FROM gammes g
      LEFT JOIN media m ON m.id = g.image_id
      WHERE g.id = :id'
@@ -54,7 +54,6 @@ json_success([
     'colorDark' => $g['colorDark'],
     'description' => $g['description'],
     'ingredientsDetail' => $g['ingredientsDetail'],
-    'hasPdfLabel' => (bool)$g['hasPdfLabel'],
     'imageId' => $g['imageId'] !== null ? (int)$g['imageId'] : null,
     'image' => $g['imageFilename'] ? '/uploads/' . $g['imageFilename'] : null,
     'products' => $products,

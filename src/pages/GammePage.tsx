@@ -2,8 +2,6 @@ import { Link, useParams } from 'react-router'
 import type { Gamme, Product } from '@/data'
 import { useGammes } from '@/hooks/useGammes'
 import { useSettings } from '@/hooks/useSettings'
-import eclatLabelPdf from '@/imports/260821_EtiquetteFacing_Eclat_Lotion.pdf'
-import nutritionLabelPdf from '@/imports/260821_EtiquetteFacing_Nourrissante_Creme.pdf'
 
 function WhatsAppOrderButton({
   product,
@@ -36,12 +34,10 @@ function WhatsAppOrderButton({
 function ProductCard({
   product,
   gamme,
-  pdfSrc,
   whatsappNumber,
 }: {
   product: Product
   gamme: Gamme
-  pdfSrc?: string
   whatsappNumber: string
 }) {
   return (
@@ -49,31 +45,16 @@ function ProductCard({
       className="bg-white overflow-hidden hover:shadow-lg transition-shadow group flex flex-col"
       style={{ borderTop: `3px solid ${gamme.color}` }}
     >
-      {/* Cover: PDF label or ingredient photo */}
+      {/* Cover: photo du produit, sinon l'image de la gamme */}
       <div
         className="relative h-52 overflow-hidden"
         style={{ background: gamme.colorLight }}
       >
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={`${gamme.nom} — ${product.type}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : pdfSrc ? (
-          <iframe
-            src={`${pdfSrc}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-            title={`Étiquette ${gamme.nom} — ${product.type}`}
-            className="w-full h-full"
-            style={{ border: 'none', pointerEvents: 'none' }}
-          />
-        ) : (
-          <img
-            src={gamme.image}
-            alt={`${gamme.nom} — ${product.type}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        )}
+        <img
+          src={product.image || gamme.image}
+          alt={`${gamme.nom} — ${product.type}`}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
         <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
           style={{ background: `linear-gradient(to top, ${gamme.colorLight}, transparent)` }} />
       </div>
@@ -131,12 +112,6 @@ export default function GammePage() {
       </div>
     )
   }
-
-  const pdfSrc = gamme.id === 'eclat'
-    ? eclatLabelPdf
-    : gamme.id === 'nutrition'
-    ? nutritionLabelPdf
-    : undefined
 
   const otherGammes = GAMMES.filter(g => g.id !== gamme.id)
 
@@ -258,7 +233,6 @@ export default function GammePage() {
                 key={product.id ?? product.type}
                 product={product}
                 gamme={gamme}
-                pdfSrc={pdfSrc}
                 whatsappNumber={whatsappNumber}
               />
             ))}

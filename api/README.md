@@ -56,6 +56,8 @@ Codes HTTP utilisés : `200` OK, `204` (préflight CORS), `400` requête invalid
 | GET | `/api/gammes/list.php` | non | — | tableau de gammes (avec `products`) |
 | GET | `/api/gammes/get.php?id=eclat` | non | — | une gamme (avec `products`) |
 | POST | `/api/gammes/update.php` | admin + CSRF | `{id, nom?, tagline?, ingredients?, color?, colorLight?, colorDark?, description?, ingredientsDetail?, imageId?}` | `{updated: true}` |
+| POST | `/api/gammes/create.php` | admin + CSRF | `{nom, tagline?, ingredients?, color?, colorLight?, colorDark?, description?, ingredientsDetail?}` | la gamme créée (même forme que `list.php`), 201 |
+| POST | `/api/gammes/delete.php` | admin + CSRF | `{id}` (supprime aussi ses produits ; refusé avec `last_gamme` s'il n'en reste qu'une) | `{deleted: true}` |
 | POST | `/api/gammes/reorder.php` | admin + CSRF | `{ids: [...]}` (ids dans le nouvel ordre) | `{reordered: true}` |
 
 `id` doit être l'un de `eclat`, `reparation`, `hydratation`, `nutrition` (ensemble fixe, voir `docs/plan.md`). Les champs `color*` doivent être au format `#RRGGBB`. `imageId` est l'id d'un média existant (voir `media/list.php`) à associer à la gamme, ou `null` pour retirer l'image actuelle.
@@ -73,7 +75,6 @@ Forme d'une gamme renvoyée par `list.php` / `get.php` :
   "colorDark": "#7A4800",
   "description": "...",
   "ingredientsDetail": "...",
-  "hasPdfLabel": true,
   "imageId": null,
   "image": null,
   "products": [
@@ -93,7 +94,7 @@ Forme d'une gamme renvoyée par `list.php` / `get.php` :
 | POST | `/api/produits/delete.php` | admin + CSRF | `{id}` | `{deleted: true}` |
 | POST | `/api/produits/reorder.php` | admin + CSRF | `{gammeId, ids: [...]}` | `{reordered: true}` |
 
-`gammeId` doit être l'une des 4 gammes (`eclat`, `reparation`, `hydratation`, `nutrition`). Le nouveau produit est placé en fin de liste (`position` = max + 1). `imageId` est l'id d'un média existant à associer au produit, ou `null` pour retirer l'image actuelle. `id` est l'identifiant numérique du produit tel que renvoyé dans `products[].id` par `gammes/list.php` / `gammes/get.php`.
+`gammeId` doit être une gamme existante (les 4 d'origine ou une gamme créée via `gammes/create.php`). Le nouveau produit est placé en fin de liste (`position` = max + 1). `imageId` est l'id d'un média existant à associer au produit, ou `null` pour retirer l'image actuelle. `id` est l'identifiant numérique du produit tel que renvoyé dans `products[].id` par `gammes/list.php` / `gammes/get.php`.
 
 `reorder.php` réattribue les positions de la gamme : `ids` contient les ids de produits dans le nouvel ordre (les produits absents du tableau sont replacés après, ordre relatif conservé). La validation refuse tout id qui n'appartient pas à la gamme (`product_not_in_gamme`), les doublons (`duplicate_ids`) et une gamme inconnue (`invalid_gamme_id`), et l'opération est atomique (transaction).
 

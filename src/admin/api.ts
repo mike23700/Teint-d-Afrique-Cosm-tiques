@@ -40,7 +40,6 @@ export interface Gamme {
   colorDark: string
   description: string
   ingredientsDetail: string
-  hasPdfLabel: boolean
   imageId: number | null
   image: string | null
   products: Product[]
@@ -176,6 +175,22 @@ export function createProduit(gammeId: string, fields: ProduitCreateFields): Pro
 
 export function deleteProduit(id: number): Promise<void> {
   return request('/api/produits/delete.php', {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+  })
+}
+
+/** Crée une gamme en fin de liste ; l'id est dérivé du nom côté serveur. */
+export function createGamme(nom: string): Promise<Gamme> {
+  return request<Gamme>('/api/gammes/create.php', {
+    method: 'POST',
+    body: JSON.stringify({ nom }),
+  })
+}
+
+/** Supprime une gamme et tous ses produits (refusé s'il s'agit de la dernière gamme). */
+export function deleteGamme(id: string): Promise<void> {
+  return request('/api/gammes/delete.php', {
     method: 'POST',
     body: JSON.stringify({ id }),
   })

@@ -1,4 +1,5 @@
-export type GammeId = 'eclat' | 'reparation' | 'hydratation' | 'nutrition'
+// Les 4 gammes d'origine ; l'admin peut en créer d'autres (id = slug du nom), d'où le repli sur string.
+export type GammeId = 'eclat' | 'reparation' | 'hydratation' | 'nutrition' | (string & {})
 
 export interface Product {
   // id / imageId / image : présents uniquement sur les produits venant de l'API
@@ -23,7 +24,6 @@ export interface Gamme {
   description: string
   ingredientsDetail: string
   image: string
-  hasPdfLabel: boolean
   products: Product[]
 }
 
@@ -41,7 +41,6 @@ export const GAMMES: Gamme[] = [
     ingredientsDetail:
       'Curcuma — puissant antioxydant, éclairant naturel reconnu depuis des siècles dans les traditions africaines et asiatiques. Carotte — riche en bêta-carotène, elle nourrit, unifie et illumine le teint en profondeur.',
     image: 'https://images.unsplash.com/photo-1768729340925-2749ecdc211c?w=800&h=600&fit=crop&auto=format',
-    hasPdfLabel: true,
     products: [
       {
         type: 'Savon',
@@ -86,7 +85,6 @@ export const GAMMES: Gamme[] = [
     ingredientsDetail:
       "Huile de Marula — pénètre sans résidu gras, régénère et protège contre les agressions extérieures. Collagène Marin — renforce l'élasticité cutanée, réduit les ridules et améliore le rebond de la peau.",
     image: 'https://images.unsplash.com/photo-1646457417431-1257d95a92b8?w=800&h=600&fit=crop&auto=format',
-    hasPdfLabel: false,
     products: [
       {
         type: 'Savon',
@@ -131,7 +129,6 @@ export const GAMMES: Gamme[] = [
     ingredientsDetail:
       "Aloe Vera — hydratation profonde, apaisement immédiat, propriétés cicatrisantes et anti-inflammatoires naturelles. Concombre — effet fraîcheur instantané, réduit les gonflements et illumine le teint sans agresser.",
     image: 'https://images.unsplash.com/photo-1613143798921-c342c82c32e2?w=800&h=600&fit=crop&auto=format',
-    hasPdfLabel: false,
     products: [
       {
         type: 'Savon',
@@ -176,7 +173,6 @@ export const GAMMES: Gamme[] = [
     ingredientsDetail:
       "Beurre de Mangue — ultra-nourrissant, concentré en vitamines A et E, laisse la peau soyeuse et rayonnante. Huile d'Avocat — pénètre en profondeur, régénère et assouplit durablement les peaux les plus sèches.",
     image: 'https://images.unsplash.com/photo-1417217601328-d3c66e6f1d48?w=800&h=600&fit=crop&auto=format',
-    hasPdfLabel: true,
     products: [
       {
         type: 'Savon',
@@ -209,3 +205,14 @@ export const GAMMES: Gamme[] = [
     ],
   },
 ]
+
+/**
+ * Images affichées par défaut sur le site tant qu'aucune image n'est importée via l'admin
+ * (blocs page_content de type "image"), indexées par « page.block_key ».
+ */
+export const DEFAULT_CONTENT_IMAGES: Record<string, string> = {
+  'accueil.hero_image':
+    'https://images.unsplash.com/photo-1577746838851-816a43ca8733?w=1600&h=1000&fit=crop&auto=format',
+  'accueil.fondatrice_image':
+    'https://images.unsplash.com/photo-1632765866070-3fadf25d3d5b?w=700&h=850&fit=crop&auto=format',
+}

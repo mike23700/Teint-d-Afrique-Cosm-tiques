@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, deleteMedia, fetchMedia, uploadMedia, type MediaItem } from '@/admin/api'
-import { Banner, Button, Field, TextInput } from '@/admin/components/ui'
+import { Banner, Button, Field, TextInput, useConfirm } from '@/admin/components/ui'
 
 const ERROR_MESSAGES: Record<string, string> = {
   missing_file: 'Choisissez une image.',
@@ -16,6 +16,8 @@ export default function MediaPage() {
   const [altText, setAltText] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [confirm, confirmModal] = useConfirm()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function reload() {
@@ -47,18 +49,31 @@ export default function MediaPage() {
   }
 
   async function handleDelete(item: MediaItem) {
-    if (!confirm(`Supprimer « ${item.originalName} » ?`)) return
+    const ok = await confirm({
+      title: "Supprimer l'image ?",
+      message: (
+        <>
+          L'image <strong>« {item.originalName} »</strong> sera supprimée du serveur. Cette action est
+          définitive.
+        </>
+      ),
+      confirmLabel: "Supprimer l'image",
+    })
+    if (!ok) return
+    setDeleteError(null)
     try {
       await deleteMedia(item.id)
       setItems(prev => (prev ? prev.filter(m => m.id !== item.id) : prev))
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'erreur_inconnue'
-      alert(ERROR_MESSAGES[code] ?? "Impossible de supprimer cette image.")
+      setDeleteError(ERROR_MESSAGES[code] ?? "Impossible de supprimer cette image.")
     }
   }
 
   return (
     <div className="space-y-8">
+      {confirmModal}
+      {deleteError && <Banner kind="error">{deleteError}</Banner>}
       <form onSubmit={handleUpload} className="bg-white border border-[#3B1705]/10 p-6 space-y-4">
         <h2 className="text-xl" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
           Ajouter une image

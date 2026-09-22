@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
 
 /** Petits composants de formulaire partagés entre les écrans de l'admin, pour rester cohérent
  * sans dupliquer les mêmes classes Tailwind dans chaque page. */
@@ -69,4 +70,86 @@ export function Banner({ kind, children }: { kind: 'error' | 'success'; children
   const styles =
     kind === 'error' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
   return <div className={`border px-4 py-2.5 text-sm ${styles}`}>{children}</div>
+}
+
+type ConfirmOptions = {
+  title: string
+  message: ReactNode
+  confirmLabel?: string
+}
+
+/**
+ * Modale de confirmation (remplace window.confirm) pour les actions destructrices.
+ * Usage : `const [confirm, confirmModal] = useConfirm()`, rendre `{confirmModal}` dans le JSX,
+ * puis `if (!(await confirm({ title, message }))) return`.
+ */
+export function useConfirm(): [(options: ConfirmOptions) => Promise<boolean>, ReactNode] {
+  const [options, setOptions] = useState<ConfirmOptions | null>(null)
+  const resolverRef = useRef<((ok: boolean) => void) | null>(null)
+
+  function confirm(next: ConfirmOptions): Promise<boolean> {
+    resolverRef.current?.(false)
+    setOptions(next)
+    return new Promise(resolve => {
+      resolverRef.current = resolve
+    })
+  }
+
+  function close(ok: boolean) {
+    resolverRef.current?.(ok)
+    resolverRef.current = null
+    setOptions(null)
+  }
+
+  const modal = options ? <ConfirmModal {...options} onClose={close} /> : null
+  return [confirm, modal]
+}
+
+function ConfirmModal({
+  title,
+  message,
+  confirmLabel = 'Supprimer',
+  onClose,
+}: ConfirmOptions & { onClose: (ok: boolean) => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A1006]/50 px-4"
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) onClose(false)
+      }}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        className="w-full max-w-md bg-[#FAF6EF] border border-[#3B1705]/15 shadow-xl p-6 space-y-4"
+      >
+        <h2
+          id="confirm-modal-title"
+          className="text-xl text-[#3B1705]"
+          style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+        >
+          {title}
+        </h2>
+        <div className="text-sm text-[#3B1705]/75 leading-relaxed">{message}</div>
+        <div className="flex justify-end gap-2 pt-2">
+          {/* Focus sur « Annuler » : une validation au clavier par erreur ne supprime rien. */}
+          <Button autoFocus variant="secondary" onClick={() => onClose(false)}>
+            Annuler
+          </Button>
+          <Button variant="danger" className="!bg-red-700 !text-white hover:!bg-red-800" onClick={() => onClose(true)}>
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
